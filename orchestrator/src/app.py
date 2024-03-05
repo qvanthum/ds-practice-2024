@@ -60,6 +60,7 @@ async def checkout():
     print("--- receiving new checkout request ---")
 
     # --- read input data and prepare microservice requests ---
+    print("Parsing request...")
     try:
         # just using the spread operator for creating the data objects
         # is hacky and shouldl not be done in production
@@ -82,12 +83,14 @@ async def checkout():
         }, 400
 
     # --- execute requests in workers ---
+    print("Sending requests to microservices...")
     loop = asyncio.get_event_loop()
     transaction_verification_result, fraud_detection_result, suggestion_result = await asyncio.gather(
         loop.run_in_executor(executor, verify_transaction, transaction_verification_request),
         loop.run_in_executor(executor, detect_fraud, fraud_detection_request),
         loop.run_in_executor(executor, get_suggestions, suggestion_request)
     )
+    print("Received microservices responses")
 
     # --- send response ---
     order_id = str(uuid.uuid1())

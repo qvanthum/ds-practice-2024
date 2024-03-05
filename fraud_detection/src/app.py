@@ -24,8 +24,14 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServiceServicer):
         """Dummy implementation of the fraud detection function"""
 
         print("Received detect fraud request")
-        is_fraud = self.is_user_fraudulent(request.userName) or self.is_creditcard_fraudulent(request.creditCard)
-        print(f"User {'is' if is_fraud else 'is not'} fraudulent.")
+        user_fraudulent = self.is_user_fraudulent(request.userName)
+        credit_card_fraudulent = self.is_creditcard_fraudulent(request.creditCard)
+        is_fraud = user_fraudulent or credit_card_fraudulent
+        if user_fraudulent:
+            print("User is fraudulent")
+        if credit_card_fraudulent:
+            print("Credit card is fraudulent")
+        print(f"User is {'fraudulent' if is_fraud else 'not fraudulent'}")
         return fraud_detection.DetectFraudResponse(isFraud=is_fraud)
 
     @staticmethod

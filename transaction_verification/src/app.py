@@ -22,42 +22,43 @@ class TransactionService(transaction_verification_grpc.TransactionServiceService
     def VerifyTransaction(self, request, context):
         """Dummy implementation of the transaction verification function"""
         print("Received transaction verification request.")
-        response = transaction_verification.VerifyResponse(isValid=self.is_request_valid(request))
-        print(f"Transaction is {'valid' if response.isValid else 'invalid'}.")
+        is_valid, invalid_reason = self.is_request_valid(request)
+        response = transaction_verification.VerifyResponse(isValid=is_valid)
+        print(f"Transaction is {'valid' if response.isValid else 'invalid: ' + invalid_reason}.")
         return response
     
-    def is_request_valid(self, request):
+    def is_request_valid(self, request) -> tuple[bool, str]:
         # check credit card number
         if not 8 <= len(request.creditCard.number.replace(" ", "")) <= 19:
-            return False
+            return False, "Invalid credit card number"
         
         # check credit card expiration date
         try:
             month, year = request.creditCard.expirationDate.split("/")
             if not 1 <= int(month) <= 12:
-                return False
+                return False, "Invalid expiration month"
             if not 0 <= int(year) <= 99:
-                return False
+                return False, "Invalid expiration year"
         except ValueError:
-            return False
+            return False, "Invalid expiration date"
         
         # check credit card cvv
         if len(request.creditCard.cvv) != 3:
-            return False
+            return False, "Invalid CVV"
         
         # check that there is at least one item
         if len(request.items) == 0:
-            return False
+            return False, "No items in the request"
         
         # check that each item has a name and a quantity
         for item in request.items:
             if item.name == "":
-                return False
+                return False, "Item has no name"
             if item.quantity <= 0:
-                return False
+                return False, "Item has zero quantity"
         
         # all checks passed, request is valid
-        return True
+        return True, ""
 
 def serve():
     # Create a gRPC server

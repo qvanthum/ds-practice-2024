@@ -21,16 +21,19 @@ import transaction_verification_pb2 as transaction_verification
 import grpc
 
 def detect_fraud(request: fraud_detection.DetectFraudRequest) -> fraud_detection.DetectFraudResponse:
+    """Sends a request to the fraud detection service and returns the response."""
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         stub = FraudDetectionServiceStub(channel)
         return stub.DetectFraud(request)
     
 def verify_transaction(request: transaction_verification.VerifyRequest) -> transaction_verification.VerifyResponse:
+    """Sends a request to the transaction verification service and returns the response."""
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         stub = TransactionServiceStub(channel)
         return stub.VerifyTransaction(request)
     
 def get_suggestions(request: suggestions.SuggestionRequest) -> suggestions.SuggestionResponse:
+    """Sends a request to the suggestion service and returns the response."""
     with grpc.insecure_channel('suggestions:50053') as channel:
         stub = SuggestionServiceStub(channel)
         return stub.SuggestBooks(request)
@@ -56,7 +59,7 @@ async def checkout():
     """
     print("--- receiving new checkout request ---")
 
-    # --- prepare requests ---
+    # --- read input data and prepare microservice requests ---
     try:
         # just using the spread operator for creating the data objects
         # is hacky and shouldl not be done in production
@@ -86,11 +89,10 @@ async def checkout():
         loop.run_in_executor(executor, get_suggestions, suggestion_request)
     )
 
+    # --- send response ---
     order_id = str(uuid.uuid1())
     order_approved = transaction_verification_result.isValid and not fraud_detection_result.isFraud
     print(f"Order {order_id} is {'approved' if order_approved else 'rejected'}")
-
-    # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
         'orderId': order_id,
         'status': 'Order Approved' if order_approved else 'Order Rejected',

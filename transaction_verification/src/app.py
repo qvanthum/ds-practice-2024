@@ -14,7 +14,13 @@ import transaction_verification_pb2_grpc as transaction_verification_grpc
 
 
 class TransactionService(transaction_verification_grpc.TransactionServiceServicer):
+    """
+    Concrete implementation of the transaction verification service.
+    Currently, it just makes some very simple dummy checks on the credit card and items.
+    """
+
     def VerifyTransaction(self, request, context):
+        """Dummy implementation of the transaction verification function"""
         print("Received transaction verification request.")
         response = transaction_verification.VerifyResponse(isValid=self.is_request_valid(request))
         print(f"Transaction is {'valid' if response.isValid else 'invalid'}.")
@@ -54,12 +60,14 @@ class TransactionService(transaction_verification_grpc.TransactionServiceService
         return True
 
 def serve():
+    # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())
     transaction_verification_grpc.add_TransactionServiceServicer_to_server(TransactionService(), server)
     port = "50052"
     server.add_insecure_port("[::]:" + port)
     server.start()
     print(f"Server started. Listening on port {port}.")
+    # Keep thread alive
     server.wait_for_termination()
 
 if __name__ == '__main__':

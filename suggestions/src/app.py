@@ -18,6 +18,11 @@ from suggestions_pb2_grpc import SuggestionServiceServicer, add_SuggestionServic
 
 
 class SuggestionService(SuggestionServiceServicer):
+    """
+    Concrete implementation of the book suggestion service.
+    Currently, it just suggests 3 random books out of a static list.
+    """
+
     all_suggestions = [
         BookSuggestion(id='1', title="The Great Gatsby", author="F. Scott Fitzgerald"),
         BookSuggestion(id='2', title="To Kill a Mockingbird", author="Harper Lee"),
@@ -52,6 +57,7 @@ class SuggestionService(SuggestionServiceServicer):
     ]
 
     def SuggestBooks(self, request, context):
+        """Dummy implementation of the book suggestion function."""
         print("Received book suggestion request.")
         response = SuggestionResponse()
         response.suggestions.extend(random.choices(self.all_suggestions, k=3))
@@ -59,12 +65,14 @@ class SuggestionService(SuggestionServiceServicer):
         return response
 
 def serve():
+    # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())
     add_SuggestionServiceServicer_to_server(SuggestionService(), server)
     port = "50053"
     server.add_insecure_port("[::]:" + port)
     server.start()
     print(f"Server started. Listening on port {port}.")
+    # Keep thread alive
     server.wait_for_termination()
 
 if __name__ == '__main__':

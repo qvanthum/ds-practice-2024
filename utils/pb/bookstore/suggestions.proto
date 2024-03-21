@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "order.proto";
+
+service SuggestionService {
+    rpc InitSuggestBooks (InitSuggestBooksRequest) returns (InitResponse);
+    rpc SuggestBooks (OrderInfo) returns (OrderResponse);
+}
+
+message InitSuggestBooksRequest {
+    string orderId = 1;
+    repeated string bookTitles = 2;
+}

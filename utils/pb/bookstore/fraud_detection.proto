@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "userdata.proto";
+import "order.proto";
+
+service FraudDetectionService {
+    rpc InitDetectFraud (InitDetectFraudRequest) returns (InitResponse);
+    rpc DetectUserFraud (OrderInfo) returns (OrderResponse);
+    rpc DetectCreditCardFraud (OrderInfo) returns (OrderResponse);
+}
+
+message InitDetectFraudRequest {
+    string orderId = 1;
+    UserData userData = 2;
+    CreditCard creditCard = 3;
+}

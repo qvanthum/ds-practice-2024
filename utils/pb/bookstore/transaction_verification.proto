@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "userdata.proto";
+import "order.proto";
+
+service TransactionService {
+    rpc InitVerifyTransaction (InitVerificationRequest) returns (InitResponse);
+    rpc VerifyItems (OrderInfo) returns (OrderResponse);
+    rpc VerifyUserData (OrderInfo) returns (OrderResponse);
+    rpc VerifyCreditCard (OrderInfo) returns (OrderResponse);
+}
+
+message Item {
+    string name = 1;
+    int32 quantity = 2;
+}
+
+message InitVerificationRequest {
+    string orderId = 1;
+    UserData userData = 2;
+    CreditCard creditCard = 3;
+    repeated Item items = 4;
+}

@@ -22,6 +22,9 @@ message BookSuggestion {
 message InitResponse {
 }
 
+message ClearDataResponse {
+}
+
 message OrderResponse {
     Timestamp timestamp = 1;
     bool success = 2;

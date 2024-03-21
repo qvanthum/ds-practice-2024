@@ -10,6 +10,7 @@ service TransactionService {
     rpc VerifyItems (OrderInfo) returns (OrderResponse);
     rpc VerifyUserData (OrderInfo) returns (OrderResponse);
     rpc VerifyCreditCard (OrderInfo) returns (OrderResponse);
+    rpc ClearData (OrderInfo) returns (ClearDataResponse);
 }
 
 message Item {

@@ -30,6 +30,11 @@ class FraudDetectionServiceStub(object):
                 request_serializer=order__pb2.OrderInfo.SerializeToString,
                 response_deserializer=order__pb2.OrderResponse.FromString,
                 )
+        self.ClearData = channel.unary_unary(
+                '/bookstore.FraudDetectionService/ClearData',
+                request_serializer=order__pb2.OrderInfo.SerializeToString,
+                response_deserializer=order__pb2.ClearDataResponse.FromString,
+                )
 
 
 class FraudDetectionServiceServicer(object):
@@ -53,6 +58,12 @@ class FraudDetectionServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ClearData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FraudDetectionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -70,6 +81,11 @@ def add_FraudDetectionServiceServicer_to_server(servicer, server):
                     servicer.DetectCreditCardFraud,
                     request_deserializer=order__pb2.OrderInfo.FromString,
                     response_serializer=order__pb2.OrderResponse.SerializeToString,
+            ),
+            'ClearData': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClearData,
+                    request_deserializer=order__pb2.OrderInfo.FromString,
+                    response_serializer=order__pb2.ClearDataResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,5 +145,22 @@ class FraudDetectionService(object):
         return grpc.experimental.unary_unary(request, target, '/bookstore.FraudDetectionService/DetectCreditCardFraud',
             order__pb2.OrderInfo.SerializeToString,
             order__pb2.OrderResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ClearData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.FraudDetectionService/ClearData',
+            order__pb2.OrderInfo.SerializeToString,
+            order__pb2.ClearDataResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

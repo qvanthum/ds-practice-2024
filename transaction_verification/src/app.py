@@ -1,64 +1,79 @@
 from concurrent import futures
 import grpc
-import os
-import sys
 
-# This set of lines are needed to import the gRPC stubs.
-# The path of the stubs is relative to the current file, or absolute inside the container.
-# Change these lines only if strictly needed.
-FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
-sys.path.insert(0, utils_path)
-import transaction_verification_pb2 as transaction_verification
-import transaction_verification_pb2_grpc as transaction_verification_grpc
+from utils.vectorclock.vectorclock import ClockService
+from utils.pb.bookstore import order_pb2 as order
+from utils.pb.bookstore import transaction_verification_pb2 as transaction_verification
+from utils.pb.bookstore import transaction_verification_pb2_grpc as transaction_verification_grpc
+from utils.pb.bookstore import fraud_detection_pb2_grpc as fraud_detection_grpc
 
 
-class TransactionService(transaction_verification_grpc.TransactionServiceServicer):
+class TransactionService(ClockService, transaction_verification_grpc.TransactionServiceServicer):
     """
     Concrete implementation of the transaction verification service.
     Currently, it just makes some very simple dummy checks on the credit card and items.
     """
 
-    def VerifyTransaction(self, request, context):
-        """Dummy implementation of the transaction verification function"""
-        print("Received transaction verification request.")
-        is_valid, invalid_reason = self.is_request_valid(request)
-        response = transaction_verification.VerifyResponse(isValid=is_valid)
-        print(f"Transaction is {'valid' if response.isValid else 'invalid: ' + invalid_reason}.")
-        return response
+    # The name of the service, used for the vector clock.
+    service_name = "transactionVerification"
+
+    def __init__(self):
+        super().__init__()
+        self.order_data: dict[str, transaction_verification.InitVerificationRequest] = {}
+
+    def InitVerifyTransaction(self, request: transaction_verification.InitVerificationRequest, context):
+        """Stores order data but doesn't do anything yet."""
+        order_id = request.orderId
+        self.inc_clock(order_id, message="received order data")
+        self.order_data[order_id] = request
+        return order.InitResponse()
+
+    def VerifyItems(self, request: order.OrderInfo, context):
+        """Dummy implementation of the item verification function"""
+        order_id = request.id
+        self.update_clock(order_id, request.timestamp, message="received item verification request")
+
+        items = self.order_data[order_id].items
+        items_valid = len(items) > 0
+        timestamp = self.inc_clock(order_id, message=f"verified items: {'valid' if items_valid else 'invalid'}")
+
+        if not items_valid:
+            return order.OrderResponse(timestamp=timestamp, success=False)
+        
+        return self.VerifyUserData(order.OrderInfo(id=order_id, timestamp=timestamp), None)
+
+    def VerifyUserData(self, request: order.OrderInfo, context):
+        order_id = request.id
+        self.update_clock(order_id, request.timestamp, message="received user data verification request")
+
+        user_data = self.order_data[order_id].userData
+        data_valid = user_data.name != "" and user_data.address != "" and user_data.contact != ""
+        timestamp = self.inc_clock(order_id, message=f"verified user data: {'valid' if data_valid else 'invalid'}")
+
+        if not data_valid:
+            return order.OrderResponse(timestamp=timestamp, success=False)
     
-    def is_request_valid(self, request) -> tuple[bool, str]:
-        # check credit card number
-        if not 8 <= len(request.creditCard.number.replace(" ", "")) <= 19:
-            return False, "Invalid credit card number"
+        with grpc.insecure_channel("fraud_detection:50051") as channel:
+            stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
+            return stub.DetectUserFraud(order.OrderInfo(id=order_id, timestamp=timestamp), None)
+
+    def VerifyCreditCard(self, request: order.OrderInfo, context):
+        order_id = request.id
+        self.update_clock(order_id, request.timestamp, message="received credit card verification request")
+
+        credit_card = self.order_data[order_id].creditCard
+        card_valid = 8 <= len(credit_card.number.replace(" ", "")) <= 19
+        card_valid &= 1 <= int(credit_card.expirationDate.split("/")[0]) <= 12
+        card_valid &= 0 <= int(credit_card.expirationDate.split("/")[1]) <= 99
+        card_valid &= len(credit_card.cvv) == 3
+        timestamp = self.inc_clock(order_id, message=f"verified credit card: {'valid' if card_valid else 'invalid'}")
+
+        if not card_valid:
+            return order.OrderResponse(timestamp=timestamp, success=False)
         
-        # check credit card expiration date
-        try:
-            month, year = request.creditCard.expirationDate.split("/")
-            if not 1 <= int(month) <= 12:
-                return False, "Invalid expiration month"
-            if not 0 <= int(year) <= 99:
-                return False, "Invalid expiration year"
-        except ValueError:
-            return False, "Invalid expiration date"
-        
-        # check credit card cvv
-        if len(request.creditCard.cvv) != 3:
-            return False, "Invalid CVV"
-        
-        # check that there is at least one item
-        if len(request.items) == 0:
-            return False, "No items in the request"
-        
-        # check that each item has a name and a quantity
-        for item in request.items:
-            if item.name == "":
-                return False, "Item has no name"
-            if item.quantity <= 0:
-                return False, "Item has zero quantity"
-        
-        # all checks passed, request is valid
-        return True, ""
+        with grpc.insecure_channel("fraud_detection:50051") as channel:
+            stub = fraud_detection_grpc.FraudDetectionServiceStub(channel)
+            return stub.DetectCreditCardFraud(order.OrderInfo(id=order_id, timestamp=timestamp), None)
 
 def serve():
     # Create a gRPC server

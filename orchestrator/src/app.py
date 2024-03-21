@@ -1,42 +1,19 @@
 import asyncio
 from concurrent import futures
-import sys
-import os
 import uuid
 
-# This set of lines are needed to import the gRPC stubs.
-# The path of the stubs is relative to the current file, or absolute inside the container.
-# Change these lines only if strictly needed.
-FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-for service in ['fraud_detection', 'suggestions', 'transaction_verification']:
-    sys.path.insert(0, os.path.abspath(os.path.join(FILE, f'../../../utils/pb/{service}')))
-
-from fraud_detection_pb2_grpc import FraudDetectionServiceStub
-import fraud_detection_pb2 as fraud_detection
-from suggestions_pb2_grpc import SuggestionServiceStub
-import suggestions_pb2 as suggestions
-from transaction_verification_pb2_grpc import TransactionServiceStub
-import transaction_verification_pb2 as transaction_verification
+from utils.vectorclock.vectorclock import timestamp_to_str
+from utils.pb.bookstore import order_pb2 as order
+from utils.pb.bookstore import userdata_pb2 as userdata
+from utils.pb.bookstore.fraud_detection_pb2_grpc import FraudDetectionServiceStub
+from utils.pb.bookstore import fraud_detection_pb2 as fraud_detection
+from utils.pb.bookstore.transaction_verification_pb2_grpc import TransactionServiceStub
+from utils.pb.bookstore import transaction_verification_pb2 as transaction_verification
+from utils.pb.bookstore.suggestions_pb2_grpc import SuggestionServiceStub
+from utils.pb.bookstore import suggestions_pb2 as suggestions
 
 import grpc
 
-def detect_fraud(request: fraud_detection.DetectFraudRequest) -> fraud_detection.DetectFraudResponse:
-    """Sends a request to the fraud detection service and returns the response."""
-    with grpc.insecure_channel('fraud_detection:50051') as channel:
-        stub = FraudDetectionServiceStub(channel)
-        return stub.DetectFraud(request)
-    
-def verify_transaction(request: transaction_verification.VerifyRequest) -> transaction_verification.VerifyResponse:
-    """Sends a request to the transaction verification service and returns the response."""
-    with grpc.insecure_channel('transaction_verification:50052') as channel:
-        stub = TransactionServiceStub(channel)
-        return stub.VerifyTransaction(request)
-    
-def get_suggestions(request: suggestions.SuggestionRequest) -> suggestions.SuggestionResponse:
-    """Sends a request to the suggestion service and returns the response."""
-    with grpc.insecure_channel('suggestions:50053') as channel:
-        stub = SuggestionServiceStub(channel)
-        return stub.SuggestBooks(request)
 
 # Import Flask.
 # Flask is a web framework for Python.
@@ -52,6 +29,63 @@ CORS(app)
 # Create ThreadPoolExecutor for handling gRPC requests.
 executor = futures.ThreadPoolExecutor(max_workers=10)
 
+
+def init_fraud_detection(request: fraud_detection.InitDetectFraudRequest):
+    """Initializes the fraud detection."""
+    with grpc.insecure_channel('fraud_detection:50051') as channel:
+        stub = FraudDetectionServiceStub(channel)
+        stub.InitDetectFraud(request)
+    
+
+def init_transaction_verification(request: transaction_verification.InitVerificationRequest):
+    """Initializes the transaction verification."""
+    with grpc.insecure_channel('transaction_verification:50052') as channel:
+        stub = TransactionServiceStub(channel)
+        stub.InitVerifyTransaction(request)
+    
+
+def init_suggestions(request: suggestions.InitSuggestBooksRequest):
+    """Initializes the book suggestions."""
+    with grpc.insecure_channel('suggestions:50053') as channel:
+        stub = SuggestionServiceStub(channel)
+        stub.InitSuggestBooks(request)
+
+
+async def send_order_data(order_id: str, user_data: userdata.UserData, credit_card: userdata.CreditCard, items: list[transaction_verification.Item]):
+    """
+    Sends all relevant order data to the different microservices.
+    """
+    transaction_verification_request = transaction_verification.InitVerificationRequest(
+        orderId=order_id, userData=user_data, creditCard=credit_card, items=items
+    )
+    fraud_detection_request = fraud_detection.InitDetectFraudRequest(
+        orderId=order_id, userData=user_data, creditCard=credit_card
+    )
+    suggestion_request = suggestions.InitSuggestBooksRequest(
+        orderId=order_id, bookTitles=[item.name for item in items]
+    )
+    loop = asyncio.get_event_loop()
+    await asyncio.gather(
+        loop.run_in_executor(executor, init_transaction_verification, transaction_verification_request),
+        loop.run_in_executor(executor, init_fraud_detection, fraud_detection_request),
+        loop.run_in_executor(executor, init_suggestions, suggestion_request)
+    )
+
+
+def execute_order_sync(order_id: str) -> order.OrderResponse:
+    """Executes the order with the given ID and returns an OrderResponse"""
+    with grpc.insecure_channel('transaction_verification:50052') as channel:
+        stub = TransactionServiceStub(channel)
+        response: order.OrderResponse = stub.VerifyItems(order.OrderInfo(id=order_id))
+        return response
+    
+
+async def execute_order(order_id: str) -> order.OrderResponse:
+    """Executes the order with the given ID and returns an OrderResponse"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, execute_order_sync, order_id)
+
+
 @app.route('/checkout', methods=['POST'])
 async def checkout():
     """
@@ -64,17 +98,13 @@ async def checkout():
     try:
         # just using the spread operator for creating the data objects
         # is hacky and shouldl not be done in production
-        transaction_verification_request = transaction_verification.VerifyRequest(
-            creditCard=transaction_verification.CreditCard(**request.json['creditCard']),
-            items=[transaction_verification.Item(**item) for item in request.json['items']],
+        user_data = userdata.UserData(
+            name=request.json['user']['name'],
+            contact=request.json['user']['contact'],
+            address=userdata.Address(**request.json['billingAddress'])
         )
-        fraud_detection_request = fraud_detection.DetectFraudRequest(
-            userName=request.json['user']['name'],
-            creditCard=fraud_detection.CreditCard(**request.json['creditCard']),
-        )
-        suggestion_request = suggestions.SuggestionRequest(
-            bookTitles=[item['name'] for item in request.json['items']],
-        )
+        credit_card = userdata.CreditCard(**request.json['creditCard'])
+        items = [transaction_verification.Item(**item) for item in request.json['items']]
     except (KeyError, TypeError) as e:
         print(repr(e))
         return {
@@ -82,20 +112,21 @@ async def checkout():
             'message': "Invalid request",
         }, 400
 
-    # --- execute requests in workers ---
-    print("Sending requests to microservices...")
-    loop = asyncio.get_event_loop()
-    transaction_verification_result, fraud_detection_result, suggestion_result = await asyncio.gather(
-        loop.run_in_executor(executor, verify_transaction, transaction_verification_request),
-        loop.run_in_executor(executor, detect_fraud, fraud_detection_request),
-        loop.run_in_executor(executor, get_suggestions, suggestion_request)
+    # --- execute order workflow ---
+    order_id = str(uuid.uuid1())
+    print(f"{order_id}: sending order data to microservices...")
+    await send_order_data(order_id, user_data, credit_card, items)
+
+    print(f"{order_id}: executing order...")
+    order_response = await execute_order(order_id)
+    order_approved = order_response.success
+    print(
+        f"Order {order_id} was executed and is {'approved' if order_approved else 'rejected'}\n"
+        f"Final timestamp: {timestamp_to_str(order_response.timestamp)}"
     )
-    print("Received microservices responses")
+
 
     # --- send response ---
-    order_id = str(uuid.uuid1())
-    order_approved = transaction_verification_result.isValid and not fraud_detection_result.isFraud
-    print(f"Order {order_id} is {'approved' if order_approved else 'rejected'}")
     order_status_response = {
         'orderId': order_id,
         'status': 'Order Approved' if order_approved else 'Order Rejected',
@@ -105,7 +136,7 @@ async def checkout():
                 'title': book.title,
                 'author': book.author
             }
-            for book in suggestion_result.suggestions
+            for book in order_response.suggestions
         ]
     }
 

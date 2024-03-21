@@ -33,6 +33,8 @@ services:
       # Expose port 8081 on the host, and map port 5000 of the container to port 8081 on the host
       - 8081:5000
     environment:
+      # Allow imports of other pb modules
+      - PYTHONPATH=/app/utils/pb/bookstore
       # Pass the environment variables to the container
       # The PYTHONUNBUFFERED environment variable ensures that the output from the application is logged to the console
       - PYTHONUNBUFFERED=TRUE
@@ -61,6 +63,7 @@ services:
       # Expose port 50051 on the host, and map port 50051 of the container to port 50051 on the host
       - 50051:50051
     environment:
+      - PYTHONPATH=/app/utils/pb/bookstore
       # Pass the environment variables to the container
       # The PYTHONUNBUFFERED environment variable ensures that the output from the application is logged to the console
       - PYTHONUNBUFFERED=TRUE
@@ -85,6 +88,7 @@ services:
     ports:
       - 50053:5005
     environment:
+      - PYTHONPATH=/app/utils/pb/bookstore
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/suggestions/src/app.py
     volumes:
@@ -103,6 +107,7 @@ services:
     ports:
       - 50052:50052
     environment:
+      - PYTHONPATH=/app/utils/pb/bookstore
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/transaction_verification/src/app.py
     volumes:

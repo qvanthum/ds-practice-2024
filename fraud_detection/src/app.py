@@ -1,47 +1,67 @@
-import sys
-import os
-
-# This set of lines are needed to import the gRPC stubs.
-# The path of the stubs is relative to the current file, or absolute inside the container.
-# Change these lines only if strictly needed.
-FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
-sys.path.insert(0, utils_path)
-import fraud_detection_pb2 as fraud_detection
-import fraud_detection_pb2_grpc as fraud_detection_grpc
+from utils.vectorclock.vectorclock import ClockService
+from utils.pb.bookstore import order_pb2 as order
+from utils.pb.bookstore import fraud_detection_pb2 as fraud_detection
+from utils.pb.bookstore import fraud_detection_pb2_grpc as fraud_detection_grpc
+from utils.pb.bookstore import transaction_verification_pb2_grpc as transaction_verification_grpc
+from utils.pb.bookstore import suggestions_pb2_grpc as suggestions_grpc
 
 import grpc
 from concurrent import futures
 
 
-class FraudDetectionService(fraud_detection_grpc.FraudDetectionServiceServicer):
+class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionServiceServicer):
     """
     Concrete implementation of the fraud detection service.
     Currently, it just makes some very simple dummy checks on the user name and credit card.
     """
 
-    def DetectFraud(self, request, context):
-        """Dummy implementation of the fraud detection function"""
+    # The name of the service, used for the vector clock.
+    service_name = "fraudDetection"
 
-        print("Received detect fraud request")
-        user_fraudulent = self.is_user_fraudulent(request.userName)
-        credit_card_fraudulent = self.is_creditcard_fraudulent(request.creditCard)
-        is_fraud = user_fraudulent or credit_card_fraudulent
-        if user_fraudulent:
-            print("User is fraudulent")
-        if credit_card_fraudulent:
-            print("Credit card is fraudulent")
-        print(f"User is {'fraudulent' if is_fraud else 'not fraudulent'}")
-        return fraud_detection.DetectFraudResponse(isFraud=is_fraud)
+    def __init__(self):
+        super().__init__()
+        self.order_data: dict[str, fraud_detection.InitDetectFraudRequest] = {}
 
-    @staticmethod
-    def is_user_fraudulent(username):
-        blacklist = ["James"]
-        return username in blacklist
+    def InitDetectFraud(self, request: fraud_detection.InitDetectFraudRequest, context):
+        """Stores order data but doesn't do anything yet."""
+        order_id = request.orderId
+        self.inc_clock(order_id, message="received order data")
+        self.order_data[order_id] = request
+        return order.InitResponse()
     
-    @staticmethod
-    def is_creditcard_fraudulent(creditcard):
-        return creditcard.cvv == "123"
+    def DetectUserFraud(self, request: order.OrderInfo, context):
+        """Dummy implementation of user fraud detection"""
+        order_id = request.id
+        self.update_clock(order_id, request.timestamp, message="received user fraud detection request")
+
+        blacklist = ["James"]
+        user_data = self.order_data[order_id].userData
+        user_fraudulent = user_data.name in blacklist
+        timestamp = self.inc_clock(order_id, message=f"verified user data: {'trusted' if not user_fraudulent else 'fraudulent'}")
+
+        if user_fraudulent:
+            return order.OrderResponse(timestamp=timestamp, success=False)
+        
+        with grpc.insecure_channel("transaction_verification:50052") as channel:
+            stub = transaction_verification_grpc.TransactionServiceStub(channel)
+            return stub.VerifyCreditCard(order.OrderInfo(id=order_id, timestamp=timestamp))
+        
+    def DetectCreditCardFraud(self, request: order.OrderInfo, context):
+        """Dummy implementation of credit card fraud detection"""
+        order_id = request.id
+        self.update_clock(order_id, request.timestamp, message="received credit card fraud detection request")
+
+        credit_card = self.order_data[order_id].creditCard
+        credit_card_fraudulent = credit_card.cvv == "123"
+        timestamp = self.inc_clock(order_id, message=f"verified credit card: {'trusted' if not credit_card_fraudulent else 'fraudulent'}")
+
+        if credit_card_fraudulent:
+            return order.OrderResponse(timestamp=timestamp, success=False)
+        
+        # query book suggestion service
+        with grpc.insecure_channel("suggestions:50053") as channel:
+            stub = suggestions_grpc.SuggestionServiceStub(channel)
+            return stub.SuggestBooks(order.OrderInfo(id=order_id, timestamp=timestamp))
     
 def serve():
     # Create a gRPC server

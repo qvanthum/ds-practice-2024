@@ -1,27 +1,22 @@
 from concurrent import futures
 import random
 import grpc
-import os
-import sys
 
-# This set of lines are needed to import the gRPC stubs.
-# The path of the stubs is relative to the current file, or absolute inside the container.
-# Change these lines only if strictly needed.
-FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
-sys.path.insert(0, utils_path)
-import suggestions_pb2 as suggestions
-import suggestions_pb2_grpc as suggestions_grpc
-
-from suggestions_pb2 import SuggestionResponse, BookSuggestion
-from suggestions_pb2_grpc import SuggestionServiceServicer, add_SuggestionServiceServicer_to_server
+from utils.vectorclock.vectorclock import ClockService
+from utils.pb.bookstore import order_pb2 as order
+from utils.pb.bookstore import suggestions_pb2 as suggestions
+from utils.pb.bookstore import suggestions_pb2_grpc as suggestions_grpc
+from utils.pb.bookstore.order_pb2 import BookSuggestion
 
 
-class SuggestionService(SuggestionServiceServicer):
+class SuggestionService(ClockService, suggestions_grpc.SuggestionServiceServicer):
     """
     Concrete implementation of the book suggestion service.
     Currently, it just suggests 3 random books out of a static list.
     """
+
+    # The name of the service, used for the vector clock.
+    service_name = "suggestions"
 
     all_suggestions = [
         BookSuggestion(id='1', title="The Great Gatsby", author="F. Scott Fitzgerald"),
@@ -56,18 +51,33 @@ class SuggestionService(SuggestionServiceServicer):
         BookSuggestion(id='30', title="The Adventures of Sherlock Holmes", author="Arthur Conan Doyle"),
     ]
 
-    def SuggestBooks(self, request, context):
+    def __init__(self):
+        super().__init__()
+        self.order_data: dict[str, suggestions.InitSuggestBooksRequest] = {}
+
+    def InitSuggestBooks(self, request: suggestions.InitSuggestBooksRequest, context):
+        """Stores order data but doesn't do anything yet."""
+        order_id = request.orderId
+        self.inc_clock(order_id, message="received order data")
+        self.order_data[order_id] = request
+        return order.InitResponse()
+
+    def SuggestBooks(self, request: order.OrderInfo, context):
         """Dummy implementation of the book suggestion function."""
-        print("Received book suggestion request.")
-        response = SuggestionResponse()
-        response.suggestions.extend(random.choices(self.all_suggestions, k=3))
-        print(f"Sending book suggestions: {', '.join([s.title for s in response.suggestions])}")
+        order_id = request.id
+        self.update_clock(order_id, request.timestamp, message="received book suggestion request")
+        books = random.choices(self.all_suggestions, k=3)
+        timestamp = self.inc_clock(order_id, message="picked book suggestions")
+
+        response = order.OrderResponse(timestamp=timestamp, success=True)
+        response.suggestions.extend(books)
         return response
+    
 
 def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())
-    add_SuggestionServiceServicer_to_server(SuggestionService(), server)
+    suggestions_grpc.add_SuggestionServiceServicer_to_server(SuggestionService(), server)
     port = "50053"
     server.add_insecure_port("[::]:" + port)
     server.start()

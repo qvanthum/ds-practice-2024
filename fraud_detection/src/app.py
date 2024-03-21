@@ -62,6 +62,14 @@ class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionSer
         with grpc.insecure_channel("suggestions:50053") as channel:
             stub = suggestions_grpc.SuggestionServiceStub(channel)
             return stub.SuggestBooks(order.OrderInfo(id=order_id, timestamp=timestamp))
+        
+    def ClearData(self, request: order.OrderInfo, context):
+        """Clears data for the given order."""
+        order_id = request.id
+        if self.is_timestamp_valid(order_id, request.timestamp):
+            print(f"{order_id}: clearing data")
+            self.order_data.pop(order_id, None)
+        return order.ClearDataResponse()
     
 def serve():
     # Create a gRPC server

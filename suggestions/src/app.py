@@ -73,6 +73,14 @@ class SuggestionService(ClockService, suggestions_grpc.SuggestionServiceServicer
         response.suggestions.extend(books)
         return response
     
+    def ClearData(self, request: order.OrderInfo, context):
+        """Clears data for the given order."""
+        order_id = request.id
+        if self.is_timestamp_valid(order_id, request.timestamp):
+            print(f"{order_id}: clearing data")
+            self.order_data.pop(order_id, None)
+        return order.ClearDataResponse()
+    
 
 def serve():
     # Create a gRPC server

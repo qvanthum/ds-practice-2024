@@ -37,6 +37,10 @@ class InitResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
+class ClearDataResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
 class OrderResponse(_message.Message):
     __slots__ = ("timestamp", "success", "suggestions")
     TIMESTAMP_FIELD_NUMBER: _ClassVar[int]

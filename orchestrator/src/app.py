@@ -51,6 +51,33 @@ def init_suggestions(request: suggestions.InitSuggestBooksRequest):
         stub.InitSuggestBooks(request)
 
 
+def clear_fraud_detection_data(order_id: str, timestamp: order.Timestamp):
+    with grpc.insecure_channel('fraud_detection:50051') as channel:
+        stub = FraudDetectionServiceStub(channel)
+        stub.ClearData(order.OrderInfo(id=order_id, timestamp=timestamp))
+
+
+def clear_transaction_verification_data(order_id: str, timestamp: order.Timestamp):
+    with grpc.insecure_channel('transaction_verification:50052') as channel:
+        stub = TransactionServiceStub(channel)
+        stub.ClearData(order.OrderInfo(id=order_id, timestamp=timestamp))
+
+
+def clear_suggestions_data(order_id: str, timestamp: order.Timestamp):
+    with grpc.insecure_channel('suggestions:50053') as channel:
+        stub = SuggestionServiceStub(channel)
+        stub.ClearData(order.OrderInfo(id=order_id, timestamp=timestamp))
+
+
+async def clear_data(order_id: str, timestamp: order.Timestamp):
+    loop = asyncio.get_event_loop()
+    await asyncio.gather(
+        loop.run_in_executor(executor, clear_fraud_detection_data, order_id, timestamp),
+        loop.run_in_executor(executor, clear_transaction_verification_data, order_id, timestamp),
+        loop.run_in_executor(executor, clear_suggestions_data, order_id, timestamp)
+    )
+
+
 async def send_order_data(order_id: str, user_data: userdata.UserData, credit_card: userdata.CreditCard, items: list[transaction_verification.Item]):
     """
     Sends all relevant order data to the different microservices.
@@ -125,6 +152,9 @@ async def checkout():
         f"Final timestamp: {timestamp_to_str(order_response.timestamp)}"
     )
 
+    # --- clear data ---
+    print(f"{order_id}: asking services to clear data...")
+    await clear_data(order_id, order_response.timestamp)
 
     # --- send response ---
     order_status_response = {

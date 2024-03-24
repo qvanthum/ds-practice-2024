@@ -6,11 +6,10 @@ from utils.vectorclock.vectorclock import timestamp_to_str
 from utils.pb.bookstore import order_pb2 as order
 from utils.pb.bookstore import userdata_pb2 as userdata
 from utils.pb.bookstore.fraud_detection_pb2_grpc import FraudDetectionServiceStub
-from utils.pb.bookstore import fraud_detection_pb2 as fraud_detection
 from utils.pb.bookstore.transaction_verification_pb2_grpc import TransactionServiceStub
-from utils.pb.bookstore import transaction_verification_pb2 as transaction_verification
 from utils.pb.bookstore.suggestions_pb2_grpc import SuggestionServiceStub
 from utils.pb.bookstore import suggestions_pb2 as suggestions
+from utils.pb.bookstore.order_queue_pb2_grpc import OrderQueueServiceStub
 
 import grpc
 
@@ -78,15 +77,12 @@ async def clear_data(order_id: str, timestamp: order.Timestamp):
     )
 
 
-async def send_order_data(order_id: str, user_data: userdata.UserData, credit_card: userdata.CreditCard, items: list[order.Item]):
+async def send_order_data(order_data: order.OrderData):
     """
     Sends all relevant order data to the different microservices.
     """
-    order_data = order.OrderData(
-        orderId=order_id, userData=user_data, creditCard=credit_card, items=items
-    )
     suggestion_request = suggestions.InitSuggestBooksRequest(
-        orderId=order_id, bookTitles=[item.name for item in items]
+        orderId=order_data.orderId, bookTitles=[item.name for item in order_data.items]
     )
     loop = asyncio.get_event_loop()
     await asyncio.gather(
@@ -96,18 +92,19 @@ async def send_order_data(order_id: str, user_data: userdata.UserData, credit_ca
     )
 
 
-def execute_order_sync(order_id: str) -> order.OrderResponse:
+def enqueue_order(order_data: order.OrderData):
+    """Sends the order to the order queue."""
+    with grpc.insecure_channel('order_queue:50054') as channel:
+        stub = OrderQueueServiceStub(channel)
+        stub.EnqueueOrder(order_data)
+
+
+def execute_order(order_id: str) -> order.OrderResponse:
     """Executes the order with the given ID and returns an OrderResponse"""
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         stub = TransactionServiceStub(channel)
         response: order.OrderResponse = stub.VerifyItems(order.OrderInfo(id=order_id))
         return response
-    
-
-async def execute_order(order_id: str) -> order.OrderResponse:
-    """Executes the order with the given ID and returns an OrderResponse"""
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(executor, execute_order_sync, order_id)
 
 
 @app.route('/checkout', methods=['POST'])
@@ -115,6 +112,7 @@ async def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
+    loop = asyncio.get_event_loop()
     print("--- receiving new checkout request ---")
 
     # --- read input data and prepare microservice requests ---
@@ -138,11 +136,14 @@ async def checkout():
 
     # --- execute order workflow ---
     order_id = str(uuid.uuid1())
+    order_data = order.OrderData(
+        orderId=order_id, userData=user_data, creditCard=credit_card, items=items
+    )
     print(f"{order_id}: sending order data to microservices...")
-    await send_order_data(order_id, user_data, credit_card, items)
+    await send_order_data(order_data)
 
     print(f"{order_id}: executing order...")
-    order_response = await execute_order(order_id)
+    order_response = await loop.run_in_executor(executor, execute_order, order_id)
     order_approved = order_response.success
     print(
         f"Order {order_id} was executed and is {'approved' if order_approved else 'rejected'}\n"
@@ -152,6 +153,10 @@ async def checkout():
     # --- clear data ---
     print(f"{order_id}: asking services to clear data...")
     await clear_data(order_id, order_response.timestamp)
+
+    # --- add order to queue ---
+    print(f"{order_id}: sending order to queue...")
+    await loop.run_in_executor(executor, enqueue_order, order_data)
 
     # --- send response ---
     order_status_response = {

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "order.proto";
+
+service OrderQueueService {
+    rpc EnqueueOrder (OrderData) returns (EmptyMessage);
+    rpc DequeueOrder (EmptyMessage) returns (OptionalOrder);
+}
+
+message OptionalOrder {
+    optional OrderData order = 1;
+}

@@ -119,3 +119,22 @@ services:
           memory: 256M
         reservations:
           memory: 50M
+  order_queue:
+    build:
+      context: ./
+      dockerfile: ./order_queue/Dockerfile
+    ports:
+      - 50054:50054
+    environment:
+      - PYTHONPATH=/app/utils/pb/bookstore
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/order_queue/src/app.py
+    volumes:
+      - ./utils:/app/utils
+      - ./order_queue/src:/app/order_queue/src
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 50M

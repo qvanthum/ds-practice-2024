@@ -2,9 +2,23 @@ syntax = "proto3";
 
 package bookstore;
 
+import "userdata.proto";
+
 message OrderInfo {
     string id = 1;
     Timestamp timestamp = 2;
+}
+
+message Item {
+    string name = 1;
+    int32 quantity = 2;
+}
+
+message OrderData {
+    string orderId = 1;
+    UserData userData = 2;
+    CreditCard creditCard = 3;
+    repeated Item items = 4;
 }
 
 message Timestamp {
@@ -19,7 +33,7 @@ message BookSuggestion {
     string author = 3;
 }
 
-message InitResponse {
+message EmptyMessage {
 }
 
 message ClearDataResponse {

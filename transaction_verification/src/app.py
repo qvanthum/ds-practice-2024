@@ -19,14 +19,14 @@ class TransactionService(ClockService, transaction_verification_grpc.Transaction
 
     def __init__(self):
         super().__init__()
-        self.order_data: dict[str, transaction_verification.InitVerificationRequest] = {}
+        self.order_data: dict[str, order.OrderData] = {}
 
-    def InitVerifyTransaction(self, request: transaction_verification.InitVerificationRequest, context):
+    def InitVerifyTransaction(self, request: order.OrderData, context):
         """Stores order data but doesn't do anything yet."""
         order_id = request.orderId
         self.inc_clock(order_id, message="received order data")
         self.order_data[order_id] = request
-        return order.InitResponse()
+        return order.EmptyMessage()
 
     def VerifyItems(self, request: order.OrderInfo, context):
         """Dummy implementation of the item verification function"""

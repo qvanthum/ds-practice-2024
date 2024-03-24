@@ -12,25 +12,30 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
+import userdata_pb2 as userdata__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0border.proto\x12\tbookstore\"@\n\tOrderInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\'\n\ttimestamp\x18\x02 \x01(\x0b\x32\x14.bookstore.Timestamp\"Y\n\tTimestamp\x12\x1f\n\x17transactionVerification\x18\x01 \x01(\x05\x12\x16\n\x0e\x66raudDetection\x18\x02 \x01(\x05\x12\x13\n\x0bsuggestions\x18\x03 \x01(\x05\";\n\x0e\x42ookSuggestion\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x03 \x01(\t\"\x0e\n\x0cInitResponse\"\x13\n\x11\x43learDataResponse\"y\n\rOrderResponse\x12\'\n\ttimestamp\x18\x01 \x01(\x0b\x32\x14.bookstore.Timestamp\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12.\n\x0bsuggestions\x18\x03 \x03(\x0b\x32\x19.bookstore.BookSuggestionb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0border.proto\x12\tbookstore\x1a\x0euserdata.proto\"@\n\tOrderInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\'\n\ttimestamp\x18\x02 \x01(\x0b\x32\x14.bookstore.Timestamp\"&\n\x04Item\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"\x8e\x01\n\tOrderData\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12%\n\x08userData\x18\x02 \x01(\x0b\x32\x13.bookstore.UserData\x12)\n\ncreditCard\x18\x03 \x01(\x0b\x32\x15.bookstore.CreditCard\x12\x1e\n\x05items\x18\x04 \x03(\x0b\x32\x0f.bookstore.Item\"Y\n\tTimestamp\x12\x1f\n\x17transactionVerification\x18\x01 \x01(\x05\x12\x16\n\x0e\x66raudDetection\x18\x02 \x01(\x05\x12\x13\n\x0bsuggestions\x18\x03 \x01(\x05\";\n\x0e\x42ookSuggestion\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x03 \x01(\t\"\x0e\n\x0c\x45mptyMessage\"\x13\n\x11\x43learDataResponse\"y\n\rOrderResponse\x12\'\n\ttimestamp\x18\x01 \x01(\x0b\x32\x14.bookstore.Timestamp\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12.\n\x0bsuggestions\x18\x03 \x03(\x0b\x32\x19.bookstore.BookSuggestionb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'order_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_ORDERINFO']._serialized_start=26
-  _globals['_ORDERINFO']._serialized_end=90
-  _globals['_TIMESTAMP']._serialized_start=92
-  _globals['_TIMESTAMP']._serialized_end=181
-  _globals['_BOOKSUGGESTION']._serialized_start=183
-  _globals['_BOOKSUGGESTION']._serialized_end=242
-  _globals['_INITRESPONSE']._serialized_start=244
-  _globals['_INITRESPONSE']._serialized_end=258
-  _globals['_CLEARDATARESPONSE']._serialized_start=260
-  _globals['_CLEARDATARESPONSE']._serialized_end=279
-  _globals['_ORDERRESPONSE']._serialized_start=281
-  _globals['_ORDERRESPONSE']._serialized_end=402
+  _globals['_ORDERINFO']._serialized_start=42
+  _globals['_ORDERINFO']._serialized_end=106
+  _globals['_ITEM']._serialized_start=108
+  _globals['_ITEM']._serialized_end=146
+  _globals['_ORDERDATA']._serialized_start=149
+  _globals['_ORDERDATA']._serialized_end=291
+  _globals['_TIMESTAMP']._serialized_start=293
+  _globals['_TIMESTAMP']._serialized_end=382
+  _globals['_BOOKSUGGESTION']._serialized_start=384
+  _globals['_BOOKSUGGESTION']._serialized_end=443
+  _globals['_EMPTYMESSAGE']._serialized_start=445
+  _globals['_EMPTYMESSAGE']._serialized_end=459
+  _globals['_CLEARDATARESPONSE']._serialized_start=461
+  _globals['_CLEARDATARESPONSE']._serialized_end=480
+  _globals['_ORDERRESPONSE']._serialized_start=482
+  _globals['_ORDERRESPONSE']._serialized_end=603
 # @@protoc_insertion_point(module_scope)

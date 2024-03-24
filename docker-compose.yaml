@@ -86,7 +86,7 @@ services:
       context: ./
       dockerfile: ./suggestions/Dockerfile
     ports:
-      - 50053:5005
+      - 50053:50053
     environment:
       - PYTHONPATH=/app/utils/pb/bookstore
       - PYTHONUNBUFFERED=TRUE

@@ -20,14 +20,14 @@ class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionSer
 
     def __init__(self):
         super().__init__()
-        self.order_data: dict[str, fraud_detection.InitDetectFraudRequest] = {}
+        self.order_data: dict[str, order.OrderData] = {}
 
-    def InitDetectFraud(self, request: fraud_detection.InitDetectFraudRequest, context):
+    def InitDetectFraud(self, request: order.OrderData, context):
         """Stores order data but doesn't do anything yet."""
         order_id = request.orderId
         self.inc_clock(order_id, message="received order data")
         self.order_data[order_id] = request
-        return order.InitResponse()
+        return order.EmptyMessage()
     
     def DetectUserFraud(self, request: order.OrderInfo, context):
         """Dummy implementation of user fraud detection"""

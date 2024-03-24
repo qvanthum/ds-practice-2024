@@ -5,7 +5,7 @@ package bookstore;
 import "order.proto";
 
 service SuggestionService {
-    rpc InitSuggestBooks (InitSuggestBooksRequest) returns (InitResponse);
+    rpc InitSuggestBooks (InitSuggestBooksRequest) returns (EmptyMessage);
     rpc SuggestBooks (OrderInfo) returns (OrderResponse);
     rpc ClearData (OrderInfo) returns (ClearDataResponse);
 }

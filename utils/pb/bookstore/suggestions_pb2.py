@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 import order_pb2 as order__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11suggestions.proto\x12\tbookstore\x1a\x0border.proto\">\n\x17InitSuggestBooksRequest\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12\x12\n\nbookTitles\x18\x02 \x03(\t2\xe5\x01\n\x11SuggestionService\x12O\n\x10InitSuggestBooks\x12\".bookstore.InitSuggestBooksRequest\x1a\x17.bookstore.InitResponse\x12>\n\x0cSuggestBooks\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12?\n\tClearData\x12\x14.bookstore.OrderInfo\x1a\x1c.bookstore.ClearDataResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11suggestions.proto\x12\tbookstore\x1a\x0border.proto\">\n\x17InitSuggestBooksRequest\x12\x0f\n\x07orderId\x18\x01 \x01(\t\x12\x12\n\nbookTitles\x18\x02 \x03(\t2\xe5\x01\n\x11SuggestionService\x12O\n\x10InitSuggestBooks\x12\".bookstore.InitSuggestBooksRequest\x1a\x17.bookstore.EmptyMessage\x12>\n\x0cSuggestBooks\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12?\n\tClearData\x12\x14.bookstore.OrderInfo\x1a\x1c.bookstore.ClearDataResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)

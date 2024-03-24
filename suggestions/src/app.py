@@ -60,7 +60,7 @@ class SuggestionService(ClockService, suggestions_grpc.SuggestionServiceServicer
         order_id = request.orderId
         self.inc_clock(order_id, message="received order data")
         self.order_data[order_id] = request
-        return order.InitResponse()
+        return order.EmptyMessage()
 
     def SuggestBooks(self, request: order.OrderInfo, context):
         """Dummy implementation of the book suggestion function."""

@@ -30,14 +30,14 @@ CORS(app)
 executor = futures.ThreadPoolExecutor(max_workers=10)
 
 
-def init_fraud_detection(request: fraud_detection.InitDetectFraudRequest):
+def init_fraud_detection(request: order.OrderData):
     """Initializes the fraud detection."""
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         stub = FraudDetectionServiceStub(channel)
         stub.InitDetectFraud(request)
     
 
-def init_transaction_verification(request: transaction_verification.InitVerificationRequest):
+def init_transaction_verification(request: order.OrderData):
     """Initializes the transaction verification."""
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         stub = TransactionServiceStub(channel)
@@ -78,23 +78,20 @@ async def clear_data(order_id: str, timestamp: order.Timestamp):
     )
 
 
-async def send_order_data(order_id: str, user_data: userdata.UserData, credit_card: userdata.CreditCard, items: list[transaction_verification.Item]):
+async def send_order_data(order_id: str, user_data: userdata.UserData, credit_card: userdata.CreditCard, items: list[order.Item]):
     """
     Sends all relevant order data to the different microservices.
     """
-    transaction_verification_request = transaction_verification.InitVerificationRequest(
+    order_data = order.OrderData(
         orderId=order_id, userData=user_data, creditCard=credit_card, items=items
-    )
-    fraud_detection_request = fraud_detection.InitDetectFraudRequest(
-        orderId=order_id, userData=user_data, creditCard=credit_card
     )
     suggestion_request = suggestions.InitSuggestBooksRequest(
         orderId=order_id, bookTitles=[item.name for item in items]
     )
     loop = asyncio.get_event_loop()
     await asyncio.gather(
-        loop.run_in_executor(executor, init_transaction_verification, transaction_verification_request),
-        loop.run_in_executor(executor, init_fraud_detection, fraud_detection_request),
+        loop.run_in_executor(executor, init_transaction_verification, order_data),
+        loop.run_in_executor(executor, init_fraud_detection, order_data),
         loop.run_in_executor(executor, init_suggestions, suggestion_request)
     )
 
@@ -131,7 +128,7 @@ async def checkout():
             address=userdata.Address(**request.json['billingAddress'])
         )
         credit_card = userdata.CreditCard(**request.json['creditCard'])
-        items = [transaction_verification.Item(**item) for item in request.json['items']]
+        items = [order.Item(**item) for item in request.json['items']]
     except (KeyError, TypeError) as e:
         print(repr(e))
         return {

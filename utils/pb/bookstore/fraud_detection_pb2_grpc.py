@@ -2,7 +2,6 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import fraud_detection_pb2 as fraud__detection__pb2
 import order_pb2 as order__pb2
 
 
@@ -17,8 +16,8 @@ class FraudDetectionServiceStub(object):
         """
         self.InitDetectFraud = channel.unary_unary(
                 '/bookstore.FraudDetectionService/InitDetectFraud',
-                request_serializer=fraud__detection__pb2.InitDetectFraudRequest.SerializeToString,
-                response_deserializer=order__pb2.InitResponse.FromString,
+                request_serializer=order__pb2.OrderData.SerializeToString,
+                response_deserializer=order__pb2.EmptyMessage.FromString,
                 )
         self.DetectUserFraud = channel.unary_unary(
                 '/bookstore.FraudDetectionService/DetectUserFraud',
@@ -69,8 +68,8 @@ def add_FraudDetectionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'InitDetectFraud': grpc.unary_unary_rpc_method_handler(
                     servicer.InitDetectFraud,
-                    request_deserializer=fraud__detection__pb2.InitDetectFraudRequest.FromString,
-                    response_serializer=order__pb2.InitResponse.SerializeToString,
+                    request_deserializer=order__pb2.OrderData.FromString,
+                    response_serializer=order__pb2.EmptyMessage.SerializeToString,
             ),
             'DetectUserFraud': grpc.unary_unary_rpc_method_handler(
                     servicer.DetectUserFraud,
@@ -109,8 +108,8 @@ class FraudDetectionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.FraudDetectionService/InitDetectFraud',
-            fraud__detection__pb2.InitDetectFraudRequest.SerializeToString,
-            order__pb2.InitResponse.FromString,
+            order__pb2.OrderData.SerializeToString,
+            order__pb2.EmptyMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

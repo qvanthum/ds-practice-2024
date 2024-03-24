@@ -3,7 +3,6 @@
 import grpc
 
 import order_pb2 as order__pb2
-import transaction_verification_pb2 as transaction__verification__pb2
 
 
 class TransactionServiceStub(object):
@@ -17,8 +16,8 @@ class TransactionServiceStub(object):
         """
         self.InitVerifyTransaction = channel.unary_unary(
                 '/bookstore.TransactionService/InitVerifyTransaction',
-                request_serializer=transaction__verification__pb2.InitVerificationRequest.SerializeToString,
-                response_deserializer=order__pb2.InitResponse.FromString,
+                request_serializer=order__pb2.OrderData.SerializeToString,
+                response_deserializer=order__pb2.EmptyMessage.FromString,
                 )
         self.VerifyItems = channel.unary_unary(
                 '/bookstore.TransactionService/VerifyItems',
@@ -80,8 +79,8 @@ def add_TransactionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'InitVerifyTransaction': grpc.unary_unary_rpc_method_handler(
                     servicer.InitVerifyTransaction,
-                    request_deserializer=transaction__verification__pb2.InitVerificationRequest.FromString,
-                    response_serializer=order__pb2.InitResponse.SerializeToString,
+                    request_deserializer=order__pb2.OrderData.FromString,
+                    response_serializer=order__pb2.EmptyMessage.SerializeToString,
             ),
             'VerifyItems': grpc.unary_unary_rpc_method_handler(
                     servicer.VerifyItems,
@@ -125,8 +124,8 @@ class TransactionService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.TransactionService/InitVerifyTransaction',
-            transaction__verification__pb2.InitVerificationRequest.SerializeToString,
-            order__pb2.InitResponse.FromString,
+            order__pb2.OrderData.SerializeToString,
+            order__pb2.EmptyMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

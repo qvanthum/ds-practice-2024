@@ -13,17 +13,18 @@ _sym_db = _symbol_database.Default()
 
 
 import order_pb2 as order__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11order_queue.proto\x12\tbookstore\x1a\x0border.proto\"C\n\rOptionalOrder\x12(\n\x05order\x18\x01 \x01(\x0b\x32\x14.bookstore.OrderDataH\x00\x88\x01\x01\x42\x08\n\x06_order2\x95\x01\n\x11OrderQueueService\x12=\n\x0c\x45nqueueOrder\x12\x14.bookstore.OrderData\x1a\x17.bookstore.EmptyMessage\x12\x41\n\x0c\x44\x65queueOrder\x12\x17.bookstore.EmptyMessage\x1a\x18.bookstore.OptionalOrderb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11order_queue.proto\x12\tbookstore\x1a\x0border.proto\x1a\x1bgoogle/protobuf/empty.proto\"C\n\rOptionalOrder\x12(\n\x05order\x18\x01 \x01(\x0b\x32\x14.bookstore.OrderDataH\x00\x88\x01\x01\x42\x08\n\x06_order2\x93\x01\n\x11OrderQueueService\x12<\n\x0c\x45nqueueOrder\x12\x14.bookstore.OrderData\x1a\x16.google.protobuf.Empty\x12@\n\x0c\x44\x65queueOrder\x12\x16.google.protobuf.Empty\x1a\x18.bookstore.OptionalOrderb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'order_queue_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_OPTIONALORDER']._serialized_start=45
-  _globals['_OPTIONALORDER']._serialized_end=112
-  _globals['_ORDERQUEUESERVICE']._serialized_start=115
-  _globals['_ORDERQUEUESERVICE']._serialized_end=264
+  _globals['_OPTIONALORDER']._serialized_start=74
+  _globals['_OPTIONALORDER']._serialized_end=141
+  _globals['_ORDERQUEUESERVICE']._serialized_start=144
+  _globals['_ORDERQUEUESERVICE']._serialized_end=291
 # @@protoc_insertion_point(module_scope)

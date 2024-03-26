@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import order_pb2 as order__pb2
 
 
@@ -17,7 +18,7 @@ class FraudDetectionServiceStub(object):
         self.InitDetectFraud = channel.unary_unary(
                 '/bookstore.FraudDetectionService/InitDetectFraud',
                 request_serializer=order__pb2.OrderData.SerializeToString,
-                response_deserializer=order__pb2.EmptyMessage.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.DetectUserFraud = channel.unary_unary(
                 '/bookstore.FraudDetectionService/DetectUserFraud',
@@ -69,7 +70,7 @@ def add_FraudDetectionServiceServicer_to_server(servicer, server):
             'InitDetectFraud': grpc.unary_unary_rpc_method_handler(
                     servicer.InitDetectFraud,
                     request_deserializer=order__pb2.OrderData.FromString,
-                    response_serializer=order__pb2.EmptyMessage.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'DetectUserFraud': grpc.unary_unary_rpc_method_handler(
                     servicer.DetectUserFraud,
@@ -109,7 +110,7 @@ class FraudDetectionService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.FraudDetectionService/InitDetectFraud',
             order__pb2.OrderData.SerializeToString,
-            order__pb2.EmptyMessage.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

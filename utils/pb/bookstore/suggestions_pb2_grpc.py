@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import order_pb2 as order__pb2
 import suggestions_pb2 as suggestions__pb2
 
@@ -18,7 +19,7 @@ class SuggestionServiceStub(object):
         self.InitSuggestBooks = channel.unary_unary(
                 '/bookstore.SuggestionService/InitSuggestBooks',
                 request_serializer=suggestions__pb2.InitSuggestBooksRequest.SerializeToString,
-                response_deserializer=order__pb2.EmptyMessage.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.SuggestBooks = channel.unary_unary(
                 '/bookstore.SuggestionService/SuggestBooks',
@@ -59,7 +60,7 @@ def add_SuggestionServiceServicer_to_server(servicer, server):
             'InitSuggestBooks': grpc.unary_unary_rpc_method_handler(
                     servicer.InitSuggestBooks,
                     request_deserializer=suggestions__pb2.InitSuggestBooksRequest.FromString,
-                    response_serializer=order__pb2.EmptyMessage.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'SuggestBooks': grpc.unary_unary_rpc_method_handler(
                     servicer.SuggestBooks,
@@ -94,7 +95,7 @@ class SuggestionService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.SuggestionService/InitSuggestBooks',
             suggestions__pb2.InitSuggestBooksRequest.SerializeToString,
-            order__pb2.EmptyMessage.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

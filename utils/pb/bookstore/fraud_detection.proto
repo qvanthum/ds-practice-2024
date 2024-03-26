@@ -3,9 +3,10 @@ syntax = "proto3";
 package bookstore;
 
 import "order.proto";
+import "google/protobuf/empty.proto";
 
 service FraudDetectionService {
-    rpc InitDetectFraud (OrderData) returns (EmptyMessage);
+    rpc InitDetectFraud (OrderData) returns (google.protobuf.Empty);
     rpc DetectUserFraud (OrderInfo) returns (OrderResponse);
     rpc DetectCreditCardFraud (OrderInfo) returns (OrderResponse);
     rpc ClearData (OrderInfo) returns (ClearDataResponse);

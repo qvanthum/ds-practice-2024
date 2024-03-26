@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import order_pb2 as order__pb2
 
 
@@ -17,7 +18,7 @@ class TransactionServiceStub(object):
         self.InitVerifyTransaction = channel.unary_unary(
                 '/bookstore.TransactionService/InitVerifyTransaction',
                 request_serializer=order__pb2.OrderData.SerializeToString,
-                response_deserializer=order__pb2.EmptyMessage.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.VerifyItems = channel.unary_unary(
                 '/bookstore.TransactionService/VerifyItems',
@@ -80,7 +81,7 @@ def add_TransactionServiceServicer_to_server(servicer, server):
             'InitVerifyTransaction': grpc.unary_unary_rpc_method_handler(
                     servicer.InitVerifyTransaction,
                     request_deserializer=order__pb2.OrderData.FromString,
-                    response_serializer=order__pb2.EmptyMessage.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'VerifyItems': grpc.unary_unary_rpc_method_handler(
                     servicer.VerifyItems,
@@ -125,7 +126,7 @@ class TransactionService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.TransactionService/InitVerifyTransaction',
             order__pb2.OrderData.SerializeToString,
-            order__pb2.EmptyMessage.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

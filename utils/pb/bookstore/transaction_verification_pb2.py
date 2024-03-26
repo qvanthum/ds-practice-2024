@@ -13,15 +13,16 @@ _sym_db = _symbol_database.Default()
 
 
 import order_pb2 as order__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\tbookstore\x1a\x0border.proto2\xe2\x02\n\x12TransactionService\x12\x46\n\x15InitVerifyTransaction\x12\x14.bookstore.OrderData\x1a\x17.bookstore.EmptyMessage\x12=\n\x0bVerifyItems\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12@\n\x0eVerifyUserData\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12\x42\n\x10VerifyCreditCard\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12?\n\tClearData\x12\x14.bookstore.OrderInfo\x1a\x1c.bookstore.ClearDataResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\tbookstore\x1a\x0border.proto\x1a\x1bgoogle/protobuf/empty.proto2\xe1\x02\n\x12TransactionService\x12\x45\n\x15InitVerifyTransaction\x12\x14.bookstore.OrderData\x1a\x16.google.protobuf.Empty\x12=\n\x0bVerifyItems\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12@\n\x0eVerifyUserData\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12\x42\n\x10VerifyCreditCard\x12\x14.bookstore.OrderInfo\x1a\x18.bookstore.OrderResponse\x12?\n\tClearData\x12\x14.bookstore.OrderInfo\x1a\x1c.bookstore.ClearDataResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'transaction_verification_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_TRANSACTIONSERVICE']._serialized_start=59
-  _globals['_TRANSACTIONSERVICE']._serialized_end=413
+  _globals['_TRANSACTIONSERVICE']._serialized_start=88
+  _globals['_TRANSACTIONSERVICE']._serialized_end=441
 # @@protoc_insertion_point(module_scope)

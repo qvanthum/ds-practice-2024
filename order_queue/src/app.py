@@ -1,6 +1,7 @@
 from utils.pb.bookstore import order_pb2 as order
 from utils.pb.bookstore import order_queue_pb2 as order_queue
 from utils.pb.bookstore import order_queue_pb2_grpc as order_queue_grpc
+from google.protobuf.empty_pb2 import Empty
 
 import grpc
 from concurrent import futures
@@ -26,9 +27,9 @@ class OrderQueueService(order_queue_grpc.OrderQueueServiceServicer):
         """Adds an order to the queue."""
         print(f"Enqueueing order: {request.orderId}")
         heapq.heappush(self.orders, (self.get_priority(request), request))
-        return order.EmptyMessage()
+        return Empty()
     
-    def DequeueOrder(self, request: order.EmptyMessage, context):
+    def DequeueOrder(self, request: Empty, context):
         """Pops the highest priority order from the queue."""
         if len(self.orders) == 0:
             return order_queue.OptionalOrder(None)

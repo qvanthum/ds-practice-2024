@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import order_pb2 as order__pb2
 import order_queue_pb2 as order__queue__pb2
 
@@ -18,11 +19,11 @@ class OrderQueueServiceStub(object):
         self.EnqueueOrder = channel.unary_unary(
                 '/bookstore.OrderQueueService/EnqueueOrder',
                 request_serializer=order__pb2.OrderData.SerializeToString,
-                response_deserializer=order__pb2.EmptyMessage.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.DequeueOrder = channel.unary_unary(
                 '/bookstore.OrderQueueService/DequeueOrder',
-                request_serializer=order__pb2.EmptyMessage.SerializeToString,
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=order__queue__pb2.OptionalOrder.FromString,
                 )
 
@@ -48,11 +49,11 @@ def add_OrderQueueServiceServicer_to_server(servicer, server):
             'EnqueueOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.EnqueueOrder,
                     request_deserializer=order__pb2.OrderData.FromString,
-                    response_serializer=order__pb2.EmptyMessage.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'DequeueOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.DequeueOrder,
-                    request_deserializer=order__pb2.EmptyMessage.FromString,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=order__queue__pb2.OptionalOrder.SerializeToString,
             ),
     }
@@ -78,7 +79,7 @@ class OrderQueueService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.OrderQueueService/EnqueueOrder',
             order__pb2.OrderData.SerializeToString,
-            order__pb2.EmptyMessage.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -94,7 +95,7 @@ class OrderQueueService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/bookstore.OrderQueueService/DequeueOrder',
-            order__pb2.EmptyMessage.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             order__queue__pb2.OptionalOrder.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

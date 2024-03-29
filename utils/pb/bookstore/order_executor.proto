@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "google/protobuf/empty.proto";
+
+service OrderExecutorService {
+    rpc SendToken (google.protobuf.Empty) returns (google.protobuf.Empty);
+}

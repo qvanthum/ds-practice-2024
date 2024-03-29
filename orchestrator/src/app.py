@@ -109,7 +109,7 @@ def execute_order(order_id: str) -> order.OrderResponse:
 
 @app.route('/checkout', methods=['POST'])
 async def checkout():
-    """
+    """ 
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
     loop = asyncio.get_event_loop()

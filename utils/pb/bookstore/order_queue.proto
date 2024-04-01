@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "order.proto";
+import "google/protobuf/empty.proto";
+
+service OrderQueueService {
+    rpc EnqueueOrder (OrderData) returns (google.protobuf.Empty);
+    rpc DequeueOrder (google.protobuf.Empty) returns (OptionalOrder);
+}
+
+message OptionalOrder {
+    optional OrderData order = 1;
+}

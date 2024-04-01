@@ -3,9 +3,10 @@ syntax = "proto3";
 package bookstore;
 
 import "order.proto";
+import "google/protobuf/empty.proto";
 
 service TransactionService {
-    rpc InitVerifyTransaction (OrderData) returns (EmptyMessage);
+    rpc InitVerifyTransaction (OrderData) returns (google.protobuf.Empty);
     rpc VerifyItems (OrderInfo) returns (OrderResponse);
     rpc VerifyUserData (OrderInfo) returns (OrderResponse);
     rpc VerifyCreditCard (OrderInfo) returns (OrderResponse);

@@ -7,6 +7,7 @@ from utils.pb.bookstore import order_pb2 as order
 from utils.pb.bookstore import suggestions_pb2 as suggestions
 from utils.pb.bookstore import suggestions_pb2_grpc as suggestions_grpc
 from utils.pb.bookstore.order_pb2 import BookSuggestion
+from google.protobuf.empty_pb2 import Empty
 
 
 class SuggestionService(ClockService, suggestions_grpc.SuggestionServiceServicer):
@@ -60,7 +61,7 @@ class SuggestionService(ClockService, suggestions_grpc.SuggestionServiceServicer
         order_id = request.orderId
         self.inc_clock(order_id, message="received order data")
         self.order_data[order_id] = request
-        return order.EmptyMessage()
+        return Empty()
 
     def SuggestBooks(self, request: order.OrderInfo, context):
         """Dummy implementation of the book suggestion function."""

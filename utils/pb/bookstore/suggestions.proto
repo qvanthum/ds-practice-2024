@@ -3,9 +3,10 @@ syntax = "proto3";
 package bookstore;
 
 import "order.proto";
+import "google/protobuf/empty.proto";
 
 service SuggestionService {
-    rpc InitSuggestBooks (InitSuggestBooksRequest) returns (EmptyMessage);
+    rpc InitSuggestBooks (InitSuggestBooksRequest) returns (google.protobuf.Empty);
     rpc SuggestBooks (OrderInfo) returns (OrderResponse);
     rpc ClearData (OrderInfo) returns (ClearDataResponse);
 }

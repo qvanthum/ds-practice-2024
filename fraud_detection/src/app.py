@@ -4,6 +4,7 @@ from utils.pb.bookstore import fraud_detection_pb2 as fraud_detection
 from utils.pb.bookstore import fraud_detection_pb2_grpc as fraud_detection_grpc
 from utils.pb.bookstore import transaction_verification_pb2_grpc as transaction_verification_grpc
 from utils.pb.bookstore import suggestions_pb2_grpc as suggestions_grpc
+from google.protobuf.empty_pb2 import Empty
 
 import grpc
 from concurrent import futures
@@ -27,7 +28,7 @@ class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionSer
         order_id = request.orderId
         self.inc_clock(order_id, message="received order data")
         self.order_data[order_id] = request
-        return order.EmptyMessage()
+        return Empty()
     
     def DetectUserFraud(self, request: order.OrderInfo, context):
         """Dummy implementation of user fraud detection"""

@@ -33,9 +33,6 @@ message BookSuggestion {
     string author = 3;
 }
 
-message EmptyMessage {
-}
-
 message ClearDataResponse {
 }
 

@@ -3,9 +3,9 @@ import grpc
 
 from utils.vectorclock.vectorclock import ClockService
 from utils.pb.bookstore import order_pb2 as order
-from utils.pb.bookstore import transaction_verification_pb2 as transaction_verification
 from utils.pb.bookstore import transaction_verification_pb2_grpc as transaction_verification_grpc
 from utils.pb.bookstore import fraud_detection_pb2_grpc as fraud_detection_grpc
+from google.protobuf.empty_pb2 import Empty
 
 
 class TransactionService(ClockService, transaction_verification_grpc.TransactionServiceServicer):
@@ -26,7 +26,7 @@ class TransactionService(ClockService, transaction_verification_grpc.Transaction
         order_id = request.orderId
         self.inc_clock(order_id, message="received order data")
         self.order_data[order_id] = request
-        return order.EmptyMessage()
+        return Empty()
 
     def VerifyItems(self, request: order.OrderInfo, context):
         """Dummy implementation of the item verification function"""

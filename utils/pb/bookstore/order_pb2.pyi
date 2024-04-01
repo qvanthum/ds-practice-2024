@@ -54,10 +54,6 @@ class BookSuggestion(_message.Message):
     author: str
     def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., author: _Optional[str] = ...) -> None: ...
 
-class EmptyMessage(_message.Message):
-    __slots__ = ()
-    def __init__(self) -> None: ...
-
 class ClearDataResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...

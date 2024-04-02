@@ -155,8 +155,9 @@ async def checkout():
     await clear_data(order_id, order_response.timestamp)
 
     # --- add order to queue ---
-    print(f"{order_id}: sending order to queue...")
-    await loop.run_in_executor(executor, enqueue_order, order_data)
+    if order_approved:
+        print(f"{order_id}: sending order to queue...")
+        await loop.run_in_executor(executor, enqueue_order, order_data)
 
     # --- send response ---
     order_status_response = {

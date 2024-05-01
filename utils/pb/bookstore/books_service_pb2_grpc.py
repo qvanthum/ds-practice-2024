@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from bookstore import books_service_pb2 as bookstore_dot_books__service__pb2
+import books_service_pb2 as books__service__pb2
 
 
 class BooksDatabaseStub(object):
@@ -15,14 +15,34 @@ class BooksDatabaseStub(object):
             channel: A grpc.Channel.
         """
         self.Read = channel.unary_unary(
-                '/BooksDatabase/Read',
-                request_serializer=bookstore_dot_books__service__pb2.ReadRequest.SerializeToString,
-                response_deserializer=bookstore_dot_books__service__pb2.ReadResponse.FromString,
+                '/bookstore.BooksDatabase/Read',
+                request_serializer=books__service__pb2.ReadRequest.SerializeToString,
+                response_deserializer=books__service__pb2.ReadResponse.FromString,
                 )
         self.Write = channel.unary_unary(
-                '/BooksDatabase/Write',
-                request_serializer=bookstore_dot_books__service__pb2.WriteRequest.SerializeToString,
-                response_deserializer=bookstore_dot_books__service__pb2.WriteResponse.FromString,
+                '/bookstore.BooksDatabase/Write',
+                request_serializer=books__service__pb2.WriteRequest.SerializeToString,
+                response_deserializer=books__service__pb2.WriteResponse.FromString,
+                )
+        self.Update = channel.unary_unary(
+                '/bookstore.BooksDatabase/Update',
+                request_serializer=books__service__pb2.WriteRequest.SerializeToString,
+                response_deserializer=books__service__pb2.WriteResponse.FromString,
+                )
+        self.Increment = channel.unary_unary(
+                '/bookstore.BooksDatabase/Increment',
+                request_serializer=books__service__pb2.AdjustRequest.SerializeToString,
+                response_deserializer=books__service__pb2.WriteResponse.FromString,
+                )
+        self.Decrement = channel.unary_unary(
+                '/bookstore.BooksDatabase/Decrement',
+                request_serializer=books__service__pb2.AdjustRequest.SerializeToString,
+                response_deserializer=books__service__pb2.WriteResponse.FromString,
+                )
+        self.Exists = channel.unary_unary(
+                '/bookstore.BooksDatabase/Exists',
+                request_serializer=books__service__pb2.ReadRequest.SerializeToString,
+                response_deserializer=books__service__pb2.ExistsResponse.FromString,
                 )
 
 
@@ -41,22 +61,66 @@ class BooksDatabaseServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Update(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Increment(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Decrement(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Exists(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BooksDatabaseServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Read': grpc.unary_unary_rpc_method_handler(
                     servicer.Read,
-                    request_deserializer=bookstore_dot_books__service__pb2.ReadRequest.FromString,
-                    response_serializer=bookstore_dot_books__service__pb2.ReadResponse.SerializeToString,
+                    request_deserializer=books__service__pb2.ReadRequest.FromString,
+                    response_serializer=books__service__pb2.ReadResponse.SerializeToString,
             ),
             'Write': grpc.unary_unary_rpc_method_handler(
                     servicer.Write,
-                    request_deserializer=bookstore_dot_books__service__pb2.WriteRequest.FromString,
-                    response_serializer=bookstore_dot_books__service__pb2.WriteResponse.SerializeToString,
+                    request_deserializer=books__service__pb2.WriteRequest.FromString,
+                    response_serializer=books__service__pb2.WriteResponse.SerializeToString,
+            ),
+            'Update': grpc.unary_unary_rpc_method_handler(
+                    servicer.Update,
+                    request_deserializer=books__service__pb2.WriteRequest.FromString,
+                    response_serializer=books__service__pb2.WriteResponse.SerializeToString,
+            ),
+            'Increment': grpc.unary_unary_rpc_method_handler(
+                    servicer.Increment,
+                    request_deserializer=books__service__pb2.AdjustRequest.FromString,
+                    response_serializer=books__service__pb2.WriteResponse.SerializeToString,
+            ),
+            'Decrement': grpc.unary_unary_rpc_method_handler(
+                    servicer.Decrement,
+                    request_deserializer=books__service__pb2.AdjustRequest.FromString,
+                    response_serializer=books__service__pb2.WriteResponse.SerializeToString,
+            ),
+            'Exists': grpc.unary_unary_rpc_method_handler(
+                    servicer.Exists,
+                    request_deserializer=books__service__pb2.ReadRequest.FromString,
+                    response_serializer=books__service__pb2.ExistsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'BooksDatabase', rpc_method_handlers)
+            'bookstore.BooksDatabase', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -75,9 +139,9 @@ class BooksDatabase(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/BooksDatabase/Read',
-            bookstore_dot_books__service__pb2.ReadRequest.SerializeToString,
-            bookstore_dot_books__service__pb2.ReadResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Read',
+            books__service__pb2.ReadRequest.SerializeToString,
+            books__service__pb2.ReadResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -92,8 +156,76 @@ class BooksDatabase(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/BooksDatabase/Write',
-            bookstore_dot_books__service__pb2.WriteRequest.SerializeToString,
-            bookstore_dot_books__service__pb2.WriteResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Write',
+            books__service__pb2.WriteRequest.SerializeToString,
+            books__service__pb2.WriteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Update(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Update',
+            books__service__pb2.WriteRequest.SerializeToString,
+            books__service__pb2.WriteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Increment(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Increment',
+            books__service__pb2.AdjustRequest.SerializeToString,
+            books__service__pb2.WriteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Decrement(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Decrement',
+            books__service__pb2.AdjustRequest.SerializeToString,
+            books__service__pb2.WriteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Exists(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Exists',
+            books__service__pb2.ReadRequest.SerializeToString,
+            books__service__pb2.ExistsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

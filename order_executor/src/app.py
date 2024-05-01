@@ -6,6 +6,8 @@ from utils.pb.bookstore import order_pb2 as order
 from utils.pb.bookstore import order_queue_pb2 as order_queue
 from utils.pb.bookstore import order_queue_pb2_grpc as order_queue_grpc
 from utils.pb.bookstore import order_executor_pb2_grpc as order_executor_grpc
+from utils.pb.bookstore import books_service_pb2 as books_service
+from utils.pb.bookstore import books_service_pb2_grpc as books_service_grpc
 from google.protobuf.empty_pb2 import Empty
 
 import grpc
@@ -29,6 +31,7 @@ class OrderExecutorService(order_executor_grpc.OrderExecutorServiceServicer):
         self.id = next(i for i in range(1, replica_count + 1) if socket.gethostbyname(self._executor_address(i)) == myip)
         self.predecessor = self.id - 1 if self.id > 1 else replica_count
         self.successor = self.id + 1 if self.id < replica_count else 1
+        self.db_id = (self.id - 1) % int(os.getenv("BOOKS_SERVICE_REPLICAS")) + 1
 
         def start_token_ring():
             # Wait for all instances to start
@@ -43,6 +46,10 @@ class OrderExecutorService(order_executor_grpc.OrderExecutorServiceServicer):
     @staticmethod
     def _executor_address(executor_id: int, with_port=False) -> str:
         return f"bookstore-order_executor-{executor_id}" + (":50060" if with_port else "")
+
+    @staticmethod
+    def _book_service_address(book_service_id: int, with_port=False) -> str:
+        return f"bookstore-books_service-{book_service_id}" + (":50065" if with_port else "")
 
     def SendToken(self, request, context):
         # get next order from queue
@@ -65,7 +72,12 @@ class OrderExecutorService(order_executor_grpc.OrderExecutorServiceServicer):
     def _process_order(self, order_data: order.OrderData):
         print(f"Executing order {order_data.orderId}")
         # simulate order processing
-        time.sleep(5)
+        time.sleep(2)
+        with grpc.insecure_channel(self._book_service_address(self.db_id, with_port=True)) as channel:
+            stub = books_service_grpc.BooksDatabaseStub(channel)
+            for item in order_data.items:
+                stub.Decrement(books_service.AdjustRequest(key=item.name, amount=item.quantity))
+        time.sleep(2)
         print(f"Order {order_data.orderId} executed")
 
     def _hand_over_token(self):

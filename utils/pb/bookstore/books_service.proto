@@ -1,8 +1,14 @@
 syntax = "proto3";
 
+package bookstore;
+
 service BooksDatabase {
     rpc Read(ReadRequest) returns (ReadResponse);
     rpc Write(WriteRequest) returns (WriteResponse);
+    rpc Update(WriteRequest) returns (WriteResponse);
+    rpc Increment(AdjustRequest) returns (WriteResponse);
+    rpc Decrement(AdjustRequest) returns (WriteResponse);
+    rpc Exists(ReadRequest) returns (ExistsResponse);
 }
 
 message ReadRequest {
@@ -10,14 +16,24 @@ message ReadRequest {
 }
 
 message ReadResponse {
-    string value = 1;
+    int32 value = 1;
 }
 
 message WriteRequest {
     string key = 1;
-    string value = 2;
+    int32 value = 2;
 }
 
 message WriteResponse {
     bool success = 1;
+}
+
+message AdjustRequest {
+    string key = 1;
+    int32 amount = 2;
+    bool allowNegativeResult = 3;
+}
+
+message ExistsResponse {
+    bool exists = 1;
 }

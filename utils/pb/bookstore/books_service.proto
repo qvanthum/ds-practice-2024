@@ -2,13 +2,17 @@ syntax = "proto3";
 
 package bookstore;
 
+import "google/protobuf/empty.proto";
+
 service BooksDatabase {
     rpc Read(ReadRequest) returns (ReadResponse);
     rpc Write(WriteRequest) returns (WriteResponse);
     rpc Update(WriteRequest) returns (WriteResponse);
-    rpc Increment(AdjustRequest) returns (WriteResponse);
-    rpc Decrement(AdjustRequest) returns (WriteResponse);
+    rpc Adjust(AdjustRequest) returns (WriteResponse);
     rpc Exists(ReadRequest) returns (ExistsResponse);
+    // 2PC methods
+    rpc PrepareAdjust(PrepareAdjustRequest) returns (PrepareAdjustResponse);
+    rpc FinalizeAdjust(FinalizeAdjustRequest) returns (google.protobuf.Empty);
 }
 
 message ReadRequest {
@@ -36,4 +40,18 @@ message AdjustRequest {
 
 message ExistsResponse {
     bool exists = 1;
+}
+
+message PrepareAdjustRequest {
+    string id = 1;
+    AdjustRequest request = 2;
+}
+
+message PrepareAdjustResponse {
+    bool ready = 1;
+}
+
+message FinalizeAdjustRequest {
+    string id = 1;
+    bool abort = 2;
 }

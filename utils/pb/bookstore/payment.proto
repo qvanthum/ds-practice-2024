@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package bookstore;
+
+import "userdata.proto";
+import "google/protobuf/empty.proto";
+
+service PaymentService {
+    rpc PreparePayment (PreparePaymentRequest) returns (PreparePaymentResponse);
+    rpc FinalizePayment (FinalizePaymentRequest) returns (google.protobuf.Empty);
+}
+
+message PreparePaymentRequest {
+  string id = 1;
+  UserData userData = 2;
+  CreditCard creditCard = 3;
+  float price = 4;
+}
+
+message PreparePaymentResponse {
+  bool ready = 1;
+}
+
+message FinalizePaymentRequest {
+  string id = 1;
+  bool abort = 2;
+}

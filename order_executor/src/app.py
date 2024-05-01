@@ -8,6 +8,8 @@ from utils.pb.bookstore import order_queue_pb2_grpc as order_queue_grpc
 from utils.pb.bookstore import order_executor_pb2_grpc as order_executor_grpc
 from utils.pb.bookstore import books_service_pb2 as books_service
 from utils.pb.bookstore import books_service_pb2_grpc as books_service_grpc
+from utils.pb.bookstore import payment_pb2 as payment
+from utils.pb.bookstore import payment_pb2_grpc as payment_grpc
 from google.protobuf.empty_pb2 import Empty
 
 import grpc
@@ -71,14 +73,36 @@ class OrderExecutorService(order_executor_grpc.OrderExecutorServiceServicer):
     
     def _process_order(self, order_data: order.OrderData):
         print(f"Executing order {order_data.orderId}")
-        # simulate order processing
-        time.sleep(2)
-        with grpc.insecure_channel(self._book_service_address(self.db_id, with_port=True)) as channel:
-            stub = books_service_grpc.BooksDatabaseStub(channel)
-            for item in order_data.items:
-                stub.Decrement(books_service.AdjustRequest(key=item.name, amount=item.quantity))
-        time.sleep(2)
-        print(f"Order {order_data.orderId} executed")
+        with grpc.insecure_channel(self._book_service_address(self.db_id, with_port=True)) as book_channel:
+            book_stub = books_service_grpc.BooksDatabaseStub(book_channel)
+            with grpc.insecure_channel("payment:50055") as payment_channel:
+                payment_stub = payment_grpc.PaymentServiceStub(payment_channel)
+                for item in order_data.items:
+                    item_order_id = f"{order_data.orderId} - {item.name}"
+                    payment_ready = payment_stub.PreparePayment(payment.PreparePaymentRequest(
+                        id=item_order_id,
+                        userData=order_data.userData,
+                        creditCard=order_data.creditCard,
+                        price=item.quantity * 10  # dummy price
+                    )).ready
+                    database_ready = book_stub.PrepareAdjust(books_service.PrepareAdjustRequest(
+                        id=item_order_id,
+                        request=books_service.AdjustRequest(
+                            key=item.name,
+                            amount=-item.quantity
+                        )
+                    )).ready
+                    abort = not payment_ready or not database_ready
+                    print(f"{'Aborting' if abort else 'Executing'} transaction for '{item.name}'")
+                    payment_stub.FinalizePayment(payment.FinalizePaymentRequest(
+                        id=item_order_id,
+                        abort=abort
+                    ))
+                    book_stub.FinalizeAdjust(books_service.FinalizeAdjustRequest(
+                        id=item_order_id,
+                        abort=abort
+                    ))
+        print(f"Execution of order {order_data.orderId} completed")
 
     def _hand_over_token(self):
         print(f"Handing token to executor {self.successor}")

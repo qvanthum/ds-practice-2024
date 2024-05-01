@@ -12,27 +12,34 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x62ooks_service.proto\x12\tbookstore\"\x1a\n\x0bReadRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1d\n\x0cReadResponse\x12\r\n\x05value\x18\x01 \x01(\x05\"*\n\x0cWriteRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x05\" \n\rWriteResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"I\n\rAdjustRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\x12\x1b\n\x13\x61llowNegativeResult\x18\x03 \x01(\x08\" \n\x0e\x45xistsResponse\x12\x0e\n\x06\x65xists\x18\x01 \x01(\x08\x32\x80\x03\n\rBooksDatabase\x12\x37\n\x04Read\x12\x16.bookstore.ReadRequest\x1a\x17.bookstore.ReadResponse\x12:\n\x05Write\x12\x17.bookstore.WriteRequest\x1a\x18.bookstore.WriteResponse\x12;\n\x06Update\x12\x17.bookstore.WriteRequest\x1a\x18.bookstore.WriteResponse\x12?\n\tIncrement\x12\x18.bookstore.AdjustRequest\x1a\x18.bookstore.WriteResponse\x12?\n\tDecrement\x12\x18.bookstore.AdjustRequest\x1a\x18.bookstore.WriteResponse\x12;\n\x06\x45xists\x12\x16.bookstore.ReadRequest\x1a\x19.bookstore.ExistsResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13\x62ooks_service.proto\x12\tbookstore\x1a\x1bgoogle/protobuf/empty.proto\"\x1a\n\x0bReadRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1d\n\x0cReadResponse\x12\r\n\x05value\x18\x01 \x01(\x05\"*\n\x0cWriteRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x05\" \n\rWriteResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"I\n\rAdjustRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\x12\x1b\n\x13\x61llowNegativeResult\x18\x03 \x01(\x08\" \n\x0e\x45xistsResponse\x12\x0e\n\x06\x65xists\x18\x01 \x01(\x08\"M\n\x14PrepareAdjustRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12)\n\x07request\x18\x02 \x01(\x0b\x32\x18.bookstore.AdjustRequest\"&\n\x15PrepareAdjustResponse\x12\r\n\x05ready\x18\x01 \x01(\x08\"2\n\x15\x46inalizeAdjustRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05\x61\x62ort\x18\x02 \x01(\x08\x32\xdc\x03\n\rBooksDatabase\x12\x37\n\x04Read\x12\x16.bookstore.ReadRequest\x1a\x17.bookstore.ReadResponse\x12:\n\x05Write\x12\x17.bookstore.WriteRequest\x1a\x18.bookstore.WriteResponse\x12;\n\x06Update\x12\x17.bookstore.WriteRequest\x1a\x18.bookstore.WriteResponse\x12<\n\x06\x41\x64just\x12\x18.bookstore.AdjustRequest\x1a\x18.bookstore.WriteResponse\x12;\n\x06\x45xists\x12\x16.bookstore.ReadRequest\x1a\x19.bookstore.ExistsResponse\x12R\n\rPrepareAdjust\x12\x1f.bookstore.PrepareAdjustRequest\x1a .bookstore.PrepareAdjustResponse\x12J\n\x0e\x46inalizeAdjust\x12 .bookstore.FinalizeAdjustRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'books_service_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_READREQUEST']._serialized_start=34
-  _globals['_READREQUEST']._serialized_end=60
-  _globals['_READRESPONSE']._serialized_start=62
-  _globals['_READRESPONSE']._serialized_end=91
-  _globals['_WRITEREQUEST']._serialized_start=93
-  _globals['_WRITEREQUEST']._serialized_end=135
-  _globals['_WRITERESPONSE']._serialized_start=137
-  _globals['_WRITERESPONSE']._serialized_end=169
-  _globals['_ADJUSTREQUEST']._serialized_start=171
-  _globals['_ADJUSTREQUEST']._serialized_end=244
-  _globals['_EXISTSRESPONSE']._serialized_start=246
-  _globals['_EXISTSRESPONSE']._serialized_end=278
-  _globals['_BOOKSDATABASE']._serialized_start=281
-  _globals['_BOOKSDATABASE']._serialized_end=665
+  _globals['_READREQUEST']._serialized_start=63
+  _globals['_READREQUEST']._serialized_end=89
+  _globals['_READRESPONSE']._serialized_start=91
+  _globals['_READRESPONSE']._serialized_end=120
+  _globals['_WRITEREQUEST']._serialized_start=122
+  _globals['_WRITEREQUEST']._serialized_end=164
+  _globals['_WRITERESPONSE']._serialized_start=166
+  _globals['_WRITERESPONSE']._serialized_end=198
+  _globals['_ADJUSTREQUEST']._serialized_start=200
+  _globals['_ADJUSTREQUEST']._serialized_end=273
+  _globals['_EXISTSRESPONSE']._serialized_start=275
+  _globals['_EXISTSRESPONSE']._serialized_end=307
+  _globals['_PREPAREADJUSTREQUEST']._serialized_start=309
+  _globals['_PREPAREADJUSTREQUEST']._serialized_end=386
+  _globals['_PREPAREADJUSTRESPONSE']._serialized_start=388
+  _globals['_PREPAREADJUSTRESPONSE']._serialized_end=426
+  _globals['_FINALIZEADJUSTREQUEST']._serialized_start=428
+  _globals['_FINALIZEADJUSTREQUEST']._serialized_end=478
+  _globals['_BOOKSDATABASE']._serialized_start=481
+  _globals['_BOOKSDATABASE']._serialized_end=957
 # @@protoc_insertion_point(module_scope)

@@ -184,4 +184,22 @@ services:
           memory: 256M
         reservations:
           memory: 50M
-      
+  payment:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    ports:
+      - 50055:50055
+    environment:
+      - PYTHONPATH=/app/utils/pb/bookstore
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/payment/src/app.py
+    volumes:
+      - ./utils:/app/utils
+      - ./payment/src:/app/payment/src
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 50M      

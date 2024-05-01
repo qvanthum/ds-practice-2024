@@ -3,6 +3,7 @@
 import grpc
 
 import books_service_pb2 as books__service__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
 class BooksDatabaseStub(object):
@@ -29,13 +30,8 @@ class BooksDatabaseStub(object):
                 request_serializer=books__service__pb2.WriteRequest.SerializeToString,
                 response_deserializer=books__service__pb2.WriteResponse.FromString,
                 )
-        self.Increment = channel.unary_unary(
-                '/bookstore.BooksDatabase/Increment',
-                request_serializer=books__service__pb2.AdjustRequest.SerializeToString,
-                response_deserializer=books__service__pb2.WriteResponse.FromString,
-                )
-        self.Decrement = channel.unary_unary(
-                '/bookstore.BooksDatabase/Decrement',
+        self.Adjust = channel.unary_unary(
+                '/bookstore.BooksDatabase/Adjust',
                 request_serializer=books__service__pb2.AdjustRequest.SerializeToString,
                 response_deserializer=books__service__pb2.WriteResponse.FromString,
                 )
@@ -43,6 +39,16 @@ class BooksDatabaseStub(object):
                 '/bookstore.BooksDatabase/Exists',
                 request_serializer=books__service__pb2.ReadRequest.SerializeToString,
                 response_deserializer=books__service__pb2.ExistsResponse.FromString,
+                )
+        self.PrepareAdjust = channel.unary_unary(
+                '/bookstore.BooksDatabase/PrepareAdjust',
+                request_serializer=books__service__pb2.PrepareAdjustRequest.SerializeToString,
+                response_deserializer=books__service__pb2.PrepareAdjustResponse.FromString,
+                )
+        self.FinalizeAdjust = channel.unary_unary(
+                '/bookstore.BooksDatabase/FinalizeAdjust',
+                request_serializer=books__service__pb2.FinalizeAdjustRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
 
@@ -67,19 +73,26 @@ class BooksDatabaseServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Increment(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def Decrement(self, request, context):
+    def Adjust(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Exists(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def PrepareAdjust(self, request, context):
+        """2PC methods
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def FinalizeAdjust(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -103,13 +116,8 @@ def add_BooksDatabaseServicer_to_server(servicer, server):
                     request_deserializer=books__service__pb2.WriteRequest.FromString,
                     response_serializer=books__service__pb2.WriteResponse.SerializeToString,
             ),
-            'Increment': grpc.unary_unary_rpc_method_handler(
-                    servicer.Increment,
-                    request_deserializer=books__service__pb2.AdjustRequest.FromString,
-                    response_serializer=books__service__pb2.WriteResponse.SerializeToString,
-            ),
-            'Decrement': grpc.unary_unary_rpc_method_handler(
-                    servicer.Decrement,
+            'Adjust': grpc.unary_unary_rpc_method_handler(
+                    servicer.Adjust,
                     request_deserializer=books__service__pb2.AdjustRequest.FromString,
                     response_serializer=books__service__pb2.WriteResponse.SerializeToString,
             ),
@@ -117,6 +125,16 @@ def add_BooksDatabaseServicer_to_server(servicer, server):
                     servicer.Exists,
                     request_deserializer=books__service__pb2.ReadRequest.FromString,
                     response_serializer=books__service__pb2.ExistsResponse.SerializeToString,
+            ),
+            'PrepareAdjust': grpc.unary_unary_rpc_method_handler(
+                    servicer.PrepareAdjust,
+                    request_deserializer=books__service__pb2.PrepareAdjustRequest.FromString,
+                    response_serializer=books__service__pb2.PrepareAdjustResponse.SerializeToString,
+            ),
+            'FinalizeAdjust': grpc.unary_unary_rpc_method_handler(
+                    servicer.FinalizeAdjust,
+                    request_deserializer=books__service__pb2.FinalizeAdjustRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -180,7 +198,7 @@ class BooksDatabase(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Increment(request,
+    def Adjust(request,
             target,
             options=(),
             channel_credentials=None,
@@ -190,24 +208,7 @@ class BooksDatabase(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Increment',
-            books__service__pb2.AdjustRequest.SerializeToString,
-            books__service__pb2.WriteResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def Decrement(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Decrement',
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Adjust',
             books__service__pb2.AdjustRequest.SerializeToString,
             books__service__pb2.WriteResponse.FromString,
             options, channel_credentials,
@@ -227,5 +228,39 @@ class BooksDatabase(object):
         return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/Exists',
             books__service__pb2.ReadRequest.SerializeToString,
             books__service__pb2.ExistsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def PrepareAdjust(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/PrepareAdjust',
+            books__service__pb2.PrepareAdjustRequest.SerializeToString,
+            books__service__pb2.PrepareAdjustResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def FinalizeAdjust(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/bookstore.BooksDatabase/FinalizeAdjust',
+            books__service__pb2.FinalizeAdjustRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

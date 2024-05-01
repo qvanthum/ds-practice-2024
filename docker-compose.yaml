@@ -150,7 +150,7 @@ services:
       PYTHONUNBUFFERED: TRUE
       PYTHONFILE: /app/order_executor/src/app.py
       ORDER_EXECUTOR_REPLICAS: 3
-      ORDER_EXECUTOR_ID: "{{.Task.Slot}}"
+      BOOKS_SERVICE_REPLICAS: 3
     volumes:
       - ./utils:/app/utils
       - ./order_executor/src:/app/order_executor/src
@@ -162,4 +162,44 @@ services:
           memory: 256M
         reservations:
           memory: 50M
-      
+  books_service:
+    build:
+      context: ./
+      dockerfile: ./books_service/Dockerfile
+    ports:
+      - 50065-50067:50065
+    environment:
+      PYTHONPATH: /app/utils/pb/bookstore
+      PYTHONUNBUFFERED: TRUE
+      PYTHONFILE: /app/books_service/src/app.py
+      BOOKS_SERVICE_REPLICAS: 3
+    volumes:
+      - ./utils:/app/utils
+      - ./books_service/src:/app/books_service/src
+    deploy:
+      mode: replicated
+      replicas: 3
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 50M
+  payment:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    ports:
+      - 50055:50055
+    environment:
+      - PYTHONPATH=/app/utils/pb/bookstore
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/payment/src/app.py
+    volumes:
+      - ./utils:/app/utils
+      - ./payment/src:/app/payment/src
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 50M      

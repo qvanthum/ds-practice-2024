@@ -1,143 +1,224 @@
-from locust import HttpUser, TaskSet, task, between
+from locust import HttpUser, task, between
 
-class OrderExecutionTasks(TaskSet):
+
+class NonFraudulentUser(HttpUser):
+    """Simulate non-fraudulent orders"""
+    wait_time = between(3, 5)
 
     @task
-    def single_non_fraudulent_order(self):
-        """Simulate a single non-fraudulent order"""
+    def order_a(self):
         order_data = {
             "orderId": "order1",
-            "userData": {
+            "user": {
                 "name": "Alice",
-                "address": "123 Main St"
+                "contact": "123 Main St"
             },
             "creditCard": {
                 "number": "4111111111111111",
-                "expiry": "12/25",
+                "expirationDate": "12/25",
                 "cvv": "456"
             },
             "items": [
                 {"name": "Book A", "quantity": 1}
-            ]
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
         }
-        self.client.post("/order", json=order_data)
+        self.client.post("/checkout", json=order_data)
 
     @task
-    def multiple_non_fraudulent_orders(self):
-        """Simulate multiple non-fraudulent orders"""
-        orders = [
-            {
-                "orderId": "order2",
-                "userData": {
-                    "name": "Bob",
-                    "address": "456 Market St"
-                },
-                "creditCard": {
-                    "number": "4111111111111111",
-                    "expiry": "12/25",
-                    "cvv": "456"
-                },
-                "items": [
-                    {"name": "Book B", "quantity": 2}
-                ]
+    def order_b(self):
+        order_data = {
+            "orderId": "order2",
+            "user": {
+                "name": "Bob",
+                "contact": "456 Market St"
             },
-            {
-                "orderId": "order3",
-                "userData": {
-                    "name": "Charlie",
-                    "address": "789 Elm St"
-                },
-                "creditCard": {
-                    "number": "4111111111111111",
-                    "expiry": "12/25",
-                    "cvv": "456"
-                },
-                "items": [
-                    {"name": "Book C", "quantity": 3}
-                ]
-            }
-        ]
-        for order in orders:
-            self.client.post("/order", json=order)
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "456"
+            },
+            "items": [
+                {"name": "Book B", "quantity": 2}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)
 
     @task
-    def mixed_orders(self):
-        """Simulate mixed orders with both fraudulent and non-fraudulent orders"""
-        orders = [
-            {
-                "orderId": "order4",
-                "userData": {
-                    "name": "James",  # Fraudulent user
-                    "address": "101 Maple St"
-                },
-                "creditCard": {
-                    "number": "4111111111111111",
-                    "expiry": "12/25",
-                    "cvv": "456"
-                },
-                "items": [
-                    {"name": "Book D", "quantity": 1}
-                ]
+    def order_c(self):
+        order_data = {
+            "orderId": "order3",
+            "user": {
+                "name": "Charlie",
+                "contact": "789 Elm St"
             },
-            {
-                "orderId": "order5",
-                "userData": {
-                    "name": "Eve",
-                    "address": "202 Oak St"
-                },
-                "creditCard": {
-                    "number": "4111111111111111",
-                    "expiry": "12/25",
-                    "cvv": "123"  # Fraudulent CVV
-                },
-                "items": [
-                    {"name": "Book E", "quantity": 1}
-                ]
-            }
-        ]
-        for order in orders:
-            self.client.post("/order", json=order)
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "456"
+            },
+            "items": [
+                {"name": "Book C", "quantity": 3}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)
+
+
+class MixedOrderUser(HttpUser):
+    """Simulate mixed orders with both fraudulent and non-fraudulent orders"""
+    wait_time = between(1, 3)
 
     @task
-    def conflicting_orders(self):
-        """Simulate conflicting orders attempting to purchase the same book"""
-        orders = [
-            {
-                "orderId": "order6",
-                "userData": {
-                    "name": "Frank",
-                    "address": "303 Pine St"
-                },
-                "creditCard": {
-                    "number": "4111111111111111",
-                    "expiry": "12/25",
-                    "cvv": "456"
-                },
-                "items": [
-                    {"name": "Book F", "quantity": 1}
-                ]
+    def order_d(self):
+        order_data = {
+            "orderId": "order4",
+            "user": {
+                "name": "James",  # Fraudulent user
+                "contact": "101 Maple St"
             },
-            {
-                "orderId": "order7",
-                "userData": {
-                    "name": "Grace",
-                    "address": "404 Birch St"
-                },
-                "creditCard": {
-                    "number": "4111111111111111",
-                    "expiry": "12/25",
-                    "cvv": "456"
-                },
-                "items": [
-                    {"name": "Book F", "quantity": 1}
-                ]
-            }
-        ]
-        for order in orders:
-            self.client.post("/order", json=order)
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "456"
+            },
+            "items": [
+                {"name": "Book D", "quantity": 1}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)
 
+    @task
+    def order_e(self):
+        order_data = {
+            "orderId": "order5",
+            "user": {
+                "name": "Eve",
+                "contact": "202 Oak St"
+            },
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "123"  # Fraudulent CVV
+            },
+            "items": [
+                {"name": "Book E", "quantity": 1}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)
 
-class WebsiteUser(HttpUser):
-    tasks = [OrderExecutionTasks]
-    wait_time = between(1, 5)
+    @task
+    def order_f(self):
+        order_data = {
+            "orderId": "order1",
+            "user": {
+                "name": "Alice",
+                "contact": "123 Main St"
+            },
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "456"
+            },
+            "items": [
+                {"name": "Book F", "quantity": 1}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)
 
+    
+class ConflictingOrderUser(HttpUser):
+    """Simulate conflicting orders attempting to purchase the same book"""
+    wait_time = between(1, 3)
+
+    @task
+    def order_g_1(self):
+        order_data = {
+            "orderId": "order6",
+            "user": {
+                "name": "Frank",
+                "contact": "303 Pine St"
+            },
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "456"
+            },
+            "items": [
+                {"name": "Book G", "quantity": 1}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)
+
+    @task
+    def order_g_2(self):
+        order_data = {
+            "orderId": "order7",
+            "user": {
+                "name": "Grace",
+                "contact": "404 Cedar St"
+            },
+            "creditCard": {
+                "number": "4111111111111111",
+                "expirationDate": "12/25",
+                "cvv": "456"
+            },
+            "items": [
+                {"name": "Book G", "quantity": 1}
+            ],
+            "billingAddress": {
+                "street": "Raatuse 22",
+                "city": "Tartu",
+                "state": "Tartumaa",
+                "zip": "12345",
+                "country": "Estonia"
+            },
+        }
+        self.client.post("/checkout", json=order_data)

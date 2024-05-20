@@ -9,6 +9,42 @@ from google.protobuf.empty_pb2 import Empty
 import grpc
 from concurrent import futures
 
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from opentelemetry import metrics
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+resource = Resource(attributes={
+    SERVICE_NAME: "fraud_detection"
+})
+
+traceProvider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://observability:4318/v1/traces"))
+traceProvider.add_span_processor(processor)
+trace.set_tracer_provider(traceProvider)
+
+reader = PeriodicExportingMetricReader(
+    OTLPMetricExporter(endpoint="http://observability:4318/v1/metrics"),
+)
+meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
+metrics.set_meter_provider(meterProvider)
+
+tracer = trace.get_tracer("fraud_detection.tracer")
+meter = metrics.get_meter("fraud_detection.meter")
+fraudulent_orders = meter.create_counter(
+    "fraudulent_orders", description="The number of fraudulent orders", unit="1"
+)
+non_fraudulent_orders = meter.create_counter(
+    "non_fraudulent_orders", description="The number of non-fraudulent orders", unit="1"
+)
+
 
 class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionServiceServicer):
     """
@@ -35,12 +71,16 @@ class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionSer
         order_id = request.id
         self.update_clock(order_id, request.timestamp, message="received user fraud detection request")
 
-        blacklist = ["James"]
-        user_data = self.order_data[order_id].userData
-        user_fraudulent = user_data.name in blacklist
+        with tracer.start_as_current_span("detect_user_fraud") as span:
+            span.set_attribute("order_id", order_id)
+            blacklist = ["James"]
+            user_data = self.order_data[order_id].userData
+            user_fraudulent = user_data.name in blacklist
+
         timestamp = self.inc_clock(order_id, message=f"verified user data: {'trusted' if not user_fraudulent else 'fraudulent'}")
 
         if user_fraudulent:
+            fraudulent_orders.add(1)
             return order.OrderResponse(timestamp=timestamp, success=False)
         
         with grpc.insecure_channel("transaction_verification:50052") as channel:
@@ -52,12 +92,17 @@ class FraudDetectionService(ClockService, fraud_detection_grpc.FraudDetectionSer
         order_id = request.id
         self.update_clock(order_id, request.timestamp, message="received credit card fraud detection request")
 
-        credit_card = self.order_data[order_id].creditCard
-        credit_card_fraudulent = credit_card.cvv == "123"
-        timestamp = self.inc_clock(order_id, message=f"verified credit card: {'trusted' if not credit_card_fraudulent else 'fraudulent'}")
+        with tracer.start_as_current_span("detect_credit_card_fraud") as span:
+            span.set_attribute("order_id", order_id)
+            credit_card = self.order_data[order_id].creditCard
+            credit_card_fraudulent = credit_card.cvv == "123"
+            timestamp = self.inc_clock(order_id, message=f"verified credit card: {'trusted' if not credit_card_fraudulent else 'fraudulent'}")
 
         if credit_card_fraudulent:
+            fraudulent_orders.add(1)
             return order.OrderResponse(timestamp=timestamp, success=False)
+        
+        non_fraudulent_orders.add(1)
         
         # query book suggestion service
         with grpc.insecure_channel("suggestions:50053") as channel:

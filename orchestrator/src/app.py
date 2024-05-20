@@ -13,6 +13,39 @@ from utils.pb.bookstore.order_queue_pb2_grpc import OrderQueueServiceStub
 
 import grpc
 
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from opentelemetry import metrics
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+resource = Resource(attributes={
+    SERVICE_NAME: "orchestrator"
+})
+
+traceProvider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://observability:4318/v1/traces"))
+traceProvider.add_span_processor(processor)
+trace.set_tracer_provider(traceProvider)
+
+reader = PeriodicExportingMetricReader(
+    OTLPMetricExporter(endpoint="http://observability:4318/v1/metrics"),
+)
+meterProvider = MeterProvider(resource=resource, metric_readers=[reader])
+metrics.set_meter_provider(meterProvider)
+
+tracer = trace.get_tracer("orchestrator.tracer")
+meter = metrics.get_meter("orchestrator.meter")
+order_counter = meter.create_counter(
+    "total_orders", description="The number of orders", unit="1"
+)
+
 
 # Import Flask.
 # Flask is a web framework for Python.
@@ -99,8 +132,8 @@ def enqueue_order(order_data: order.OrderData):
         stub.EnqueueOrder(order_data)
 
 
-def execute_order(order_id: str) -> order.OrderResponse:
-    """Executes the order with the given ID and returns an OrderResponse"""
+def prepare_order(order_id: str) -> order.OrderResponse:
+    """Validates the order with the given ID and returns an OrderResponse with suggestions"""
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         stub = TransactionServiceStub(channel)
         response: order.OrderResponse = stub.VerifyItems(order.OrderInfo(id=order_id))
@@ -112,68 +145,76 @@ async def checkout():
     """ 
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
-    loop = asyncio.get_event_loop()
-    print("--- receiving new checkout request ---")
+    with tracer.start_as_current_span("checkout"):
+        loop = asyncio.get_event_loop()
+        print("--- receiving new checkout request ---")
+        order_counter.add(1)
 
-    # --- read input data and prepare microservice requests ---
-    print("Parsing request...")
-    try:
-        # just using the spread operator for creating the data objects
-        # is hacky and shouldl not be done in production
-        user_data = userdata.UserData(
-            name=request.json['user']['name'],
-            contact=request.json['user']['contact'],
-            address=userdata.Address(**request.json['billingAddress'])
-        )
-        credit_card = userdata.CreditCard(**request.json['creditCard'])
-        items = [order.Item(**item) for item in request.json['items']]
-    except (KeyError, TypeError) as e:
-        print(repr(e))
-        return {
-            'code': "400",
-            'message': "Invalid request",
-        }, 400
+        # --- read input data and prepare microservice requests ---
+        with tracer.start_as_current_span("parse_request"):
+            print("Parsing request...")
+            try:
+                # just using the spread operator for creating the data objects
+                # is hacky and shouldl not be done in production
+                user_data = userdata.UserData(
+                    name=request.json['user']['name'],
+                    contact=request.json['user']['contact'],
+                    address=userdata.Address(**request.json['billingAddress'])
+                )
+                credit_card = userdata.CreditCard(**request.json['creditCard'])
+                items = [order.Item(**item) for item in request.json['items']]
+            except (KeyError, TypeError) as e:
+                print(repr(e))
+                return {
+                    'code': "400",
+                    'message': "Invalid request",
+                }, 400
 
-    # --- execute order workflow ---
-    order_id = str(uuid.uuid1())
-    order_data = order.OrderData(
-        orderId=order_id, userData=user_data, creditCard=credit_card, items=items
-    )
-    print(f"{order_id}: sending order data to microservices...")
-    await send_order_data(order_data)
+        # --- prepare order ---
+        with tracer.start_as_current_span("send_order_data"):
+            order_id = str(uuid.uuid1())
+            order_data = order.OrderData(
+                orderId=order_id, userData=user_data, creditCard=credit_card, items=items
+            )
+            print(f"{order_id}: sending order data to microservices...")
+            await send_order_data(order_data)
+        trace.get_current_span().set_attribute("order_id", order_id)
 
-    print(f"{order_id}: executing order...")
-    order_response = await loop.run_in_executor(executor, execute_order, order_id)
-    order_approved = order_response.success
-    print(
-        f"Order {order_id} was executed and is {'approved' if order_approved else 'rejected'}\n"
-        f"Final timestamp: {timestamp_to_str(order_response.timestamp)}"
-    )
+        with tracer.start_as_current_span("prepare_order"):
+            print(f"{order_id}: executing order...")
+            order_response = await loop.run_in_executor(executor, prepare_order, order_id)
+            order_approved = order_response.success
+            print(
+                f"Order {order_id} was executed and is {'approved' if order_approved else 'rejected'}\n"
+                f"Final timestamp: {timestamp_to_str(order_response.timestamp)}"
+            )
 
-    # --- clear data ---
-    print(f"{order_id}: asking services to clear data...")
-    await clear_data(order_id, order_response.timestamp)
+        with tracer.start_as_current_span("clear_data"):
+            print(f"{order_id}: asking services to clear data...")
+            await clear_data(order_id, order_response.timestamp)
 
-    # --- add order to queue ---
-    if order_approved:
-        print(f"{order_id}: sending order to queue...")
-        await loop.run_in_executor(executor, enqueue_order, order_data)
+        # --- add order to queue ---
+        if order_approved:
+            with tracer.start_as_current_span("enqueue_order"):
+                print(f"{order_id}: sending order to queue...")
+                await loop.run_in_executor(executor, enqueue_order, order_data)
 
-    # --- send response ---
-    order_status_response = {
-        'orderId': order_id,
-        'status': 'Order Approved' if order_approved else 'Order Rejected',
-        'suggestedBooks': [
-            {
-                'id': book.id,
-                'title': book.title,
-                'author': book.author
+        # --- send response ---
+        with tracer.start_as_current_span("send_response"):
+            order_status_response = {
+                'orderId': order_id,
+                'status': 'Order Approved' if order_approved else 'Order Rejected',
+                'suggestedBooks': [
+                    {
+                        'id': book.id,
+                        'title': book.title,
+                        'author': book.author
+                    }
+                    for book in order_response.suggestions
+                ]
             }
-            for book in order_response.suggestions
-        ]
-    }
 
-    return order_status_response
+        return order_status_response
 
 
 if __name__ == '__main__':

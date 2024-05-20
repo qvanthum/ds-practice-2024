@@ -29,6 +29,14 @@ class BooksDatabaseService(books_service_grpc.BooksDatabaseServicer):
             "JavaScript - The Good Parts": 3,
             "Domain-Driven Design: Tackling Complexity in the Heart of Software": 3,
             "Design Patterns: Elements of Reusable Object-Oriented Software": 3,
+            # Books for load testing
+            "Book A": 50,
+            "Book B": 50,
+            "Book C": 50,
+            "Book D": 50,
+            "Book E": 50,
+            "Book F": 50,
+            "Book G": 50,
         }
         self.adjustments: dict[str, books_service.AdjustRequest] = {}
         self.lock = threading.Lock()
@@ -128,7 +136,7 @@ class BooksDatabaseService(books_service_grpc.BooksDatabaseServicer):
         print(f"Updating backups for '{request.key}'")
         # In a production environment this would be parallelized
         success = True
-        for i in range(1, self.replica_count):
+        for i in range(1, self.replica_count+1):
             if i == self.id:
                 continue
             with grpc.insecure_channel(self._book_service_address(i, with_port=True)) as channel:
